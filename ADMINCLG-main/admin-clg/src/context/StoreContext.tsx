@@ -61,7 +61,8 @@ export const StoreContext = createContext<StoreContextType | null>(null);
 
 const StoreContextProvider = (props: StoreContextProviderProps) => {
 
-    const url = "https://vignanadimbackend.onrender.com"
+    // const url = "https://vignanadimbackend.onrender.com"
+    const url = import.meta.env.VITE_API_URL || 'http://localhost:5000';
     // const [food_list, setFoodList] = useState([]);
     // const [cartItems, setCartItems] = useState({});
     const [render,setRender] = useState(false);
