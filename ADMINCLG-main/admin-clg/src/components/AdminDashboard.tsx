@@ -2,13 +2,13 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import type { CSSProperties } from 'react';
 // import ReactDOM from 'react-dom';
-import { Link, useNavigate } from 'react-router-dom';
-import { useContext } from 'react';
-import { StoreContext } from '../context/StoreContext';
+// import { useNavigate } from 'react-router-dom';
+// import { useContext } from 'react';
+// import { StoreContext } from '../context/StoreContext';
 // import AdminLogin from './AdminLogin';
 
 // --- API Configuration ---
-const API_BASE_URL = 'http://localhost:5000'; // IMPORTANT: Change to your backend URL
+const API_BASE_URL = 'https://vignanadimbackend.onrender.com'; // IMPORTANT: Change to your backend URL
 
 // --- SVG Icons ---
 const Logo = () => <img src="https://upload.wikimedia.org/wikipedia/commons/a/ae/Vignan_logo.png" alt="Vignan's Logo" style={{ height: '45px', width: 'auto' }} />;
@@ -84,12 +84,12 @@ const DepartmentForm = ({ onFormSubmit, initialData, onCancel }: {
     initialData?: Department | HeroImage; 
     onCancel: () => void 
 }) => {
-    const [missionPoints, setMissionPoints] = useState<string[]>([]);
-    const [faculty, setFaculty] = useState<FacultyMember[]>([]);
+    const [missionPoints, setMissionPoints] = useState<string[]>(['']);
+    const [faculty, setFaculty] = useState<FacultyMember[]>([{ sno: 1, name: '', designation: '' }]);
 
     useEffect(() => { 
-        setMissionPoints(initialData?.mission || ['']); 
-        setFaculty(initialData?.faculty || [{ sno: 1, name: '', designation: '' }]); 
+        setMissionPoints(initialData.mission); 
+        setFaculty(initialData.faculty); 
     }, [initialData]);
 
    
@@ -393,8 +393,8 @@ const AdminDashboard = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    const {  token ,setToken, setRender,loginEmail,setLoginEmail } = useContext(StoreContext);
-    const navigate = useNavigate();
+    // const {  token ,setToken, setRender,loginEmail,setLoginEmail } = useContext(StoreContext);
+    // const navigate = useNavigate();
     // const menuConfig = {
     //     'Departments': { endpoint: 'department', 
     //         listColumns: [{ header: 'Code', 
