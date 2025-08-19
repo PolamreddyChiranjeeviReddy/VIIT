@@ -2,9 +2,9 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import type { CSSProperties } from 'react';
 // import ReactDOM from 'react-dom';
-// import { useNavigate } from 'react-router-dom';
-// import { useContext } from 'react';
-// import { StoreContext } from '../context/StoreContext';
+import { useNavigate } from 'react-router-dom';
+import { useContext } from 'react';
+import { StoreContext } from '../context/StoreContext';
 // import AdminLogin from './AdminLogin';
 
 // --- API Configuration ---
@@ -393,8 +393,8 @@ const AdminDashboard = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    // const {  token ,setToken, setRender,loginEmail,setLoginEmail } = useContext(StoreContext);
-    // const navigate = useNavigate();
+    const { loginEmail,setLoginEmail,setRender,setToken } = useContext(StoreContext);
+    const navigate = useNavigate();
     // const menuConfig = {
     //     'Departments': { endpoint: 'department', 
     //         listColumns: [{ header: 'Code', 
@@ -595,7 +595,7 @@ const AdminDashboard = () => {
     setToken("");
     setLoginEmail("");
     setRender(false);
-    // navigate('/');
+    navigate('/');
     }
     return (
         <>
