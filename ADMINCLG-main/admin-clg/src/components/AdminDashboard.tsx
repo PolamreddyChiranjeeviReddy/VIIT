@@ -6,7 +6,9 @@ import { useNavigate } from 'react-router-dom';
 import { useContext } from 'react';
 import { StoreContext } from '../context/StoreContext';
 // import AdminLogin from './AdminLogin';
-
+// const isDepartment = (item: any): item is Department => {
+//     return 'code' in item && 'mission' in item && 'faculty' in item;
+// };
 // --- API Configuration ---
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'; // IMPORTANT: Change to your backend URL
 
@@ -79,116 +81,482 @@ interface Announcement {_id: string; date: string; title: string; path: string; 
 interface Placement {_id:string; student: string; company: string; package: string; image: ImageFile; companyLogo: ImageFile;}
 
 // --- FORM COMPONENTS ---
-const DepartmentForm = ({ onFormSubmit, initialData, onCancel }: { 
-    onFormSubmit: (data: FormData) => void; 
-    initialData?: Department | HeroImage; 
-    onCancel: () => void 
-}) => {
-    const [missionPoints, setMissionPoints] = useState<string[]>(['']);
-    const [faculty, setFaculty] = useState<FacultyMember[]>([{ sno: 1, name: '', designation: '' }]);
 
-    useEffect(() => { 
-        setMissionPoints(initialData.mission); 
-        setFaculty(initialData.faculty); 
-    }, [initialData]);
 
-   
-    const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => { 
-    e.preventDefault(); 
+interface DepartmentFormProps {
+  onFormSubmit: (data: FormData) => void;
+  initialData?: Department;
+  onCancel: () => void;
+}
+
+// Type guard
+const isDepartment = (data: any): data is Department => {
+  return 'code' in data && 'mission' in data && 'faculty' in data;
+};
+
+const DepartmentForm = ({ onFormSubmit, initialData, onCancel }: DepartmentFormProps) => {
+  const [missionPoints, setMissionPoints] = useState<string[]>(['']);
+  const [faculty, setFaculty] = useState<FacultyMember[]>([
+    { sno: 1, name: '', designation: '' }
+  ]);
+
+  // Initialize form data when editing
+  useEffect(() => {
+    if (initialData && isDepartment(initialData)) {
+      setMissionPoints(initialData.mission || ['']);
+      setFaculty(initialData.faculty || [{ sno: 1, name: '', designation: '' }]);
+    } else {
+      setMissionPoints(['']);
+      setFaculty([{ sno: 1, name: '', designation: '' }]);
+    }
+  }, [initialData]);
+
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
     const formData = new FormData(e.currentTarget);
 
-    // Only add mission if not empty
-    if (missionPoints.length > 0) {
-        formData.set('mission', JSON.stringify(missionPoints.filter(m => m)));
+    // Add mission points if not empty
+    const validMissionPoints = missionPoints.filter(point => point.trim());
+    if (validMissionPoints.length > 0) {
+      formData.set('mission', JSON.stringify(validMissionPoints));
     }
 
-    // Only add faculty entries with valid name & designation
-    const validFaculty = faculty.filter(f => f.name && f.designation);
+    // Add faculty entries with valid name & designation
+    const validFaculty = faculty.filter(f => f.name.trim() && f.designation.trim());
     if (validFaculty.length > 0) {
-        formData.set('faculty', JSON.stringify(validFaculty));
+      formData.set('faculty', JSON.stringify(validFaculty));
     }
 
-    console.log('Submitting Department Form:', Object.fromEntries(formData.entries()));
-    onFormSubmit(formData); 
+    onFormSubmit(formData);
+  };
+
+  const handleFacultyChange = (index: number, field: keyof FacultyMember, value: string | number) => {
+    setFaculty(faculty.map((f, i) => 
+      i === index ? { ...f, [field]: value } : f
+    ));
+  };
+
+  const addFaculty = () => {
+    setFaculty([
+      ...faculty,
+      { sno: faculty.length + 1, name: '', designation: '' }
+    ]);
+  };
+
+  const removeFaculty = (index: number) => {
+    setFaculty(faculty.filter((_, i) => i !== index));
+  };
+
+  const addMissionPoint = () => {
+    setMissionPoints([...missionPoints, '']);
+  };
+
+  const removeMissionPoint = (index: number) => {
+    setMissionPoints(missionPoints.filter((_, i) => i !== index));
+  };
+
+  return (
+    <form onSubmit={handleSubmit} style={styles.form}>
+      <div style={styles.formRow}>
+        <div style={{...styles.formGroup, flex: 1, marginRight: '10px'}}>
+          <label style={styles.label}>Department Code</label>
+          <input 
+            name="code"
+            defaultValue={initialData?.code}
+            style={styles.input}
+            required
+            disabled={!!initialData}
+            placeholder="e.g., cse"
+          />
+        </div>
+        <div style={{...styles.formGroup, flex: 1, marginLeft: '10px'}}>
+          <label style={styles.label}>Department Name</label>
+          <input 
+            name="name"
+            defaultValue={initialData?.name}
+            style={styles.input}
+            required
+            placeholder="e.g., Computer Science and Engineering"
+          />
+        </div>
+      </div>
+
+      <div style={styles.formGroup}>
+        <label style={styles.label}>About Department</label>
+        <textarea 
+          name="about"
+          defaultValue={initialData?.about}
+          style={styles.textarea}
+          required
+          placeholder="Enter department description..."
+        />
+      </div>
+
+      <div style={styles.formRow}>
+        <div style={{...styles.formGroup, flex: 1, marginRight: '10px'}}>
+          <label style={styles.label}>HOD Name</label>
+          <input 
+            name="hodName"
+            defaultValue={initialData?.hodName}
+            style={styles.input}
+            required
+            placeholder="Enter HOD name"
+          />
+        </div>
+        <div style={{...styles.formGroup, flex: 1, marginLeft: '10px'}}>
+          <label style={styles.label}>Vision</label>
+          <textarea 
+            name="vision"
+            defaultValue={initialData?.vision}
+            style={{...styles.textarea, minHeight: '52px'}}
+            required
+            placeholder="Enter department vision..."
+          />
+        </div>
+      </div>
+
+      <div style={styles.formGroup}>
+        <label style={styles.label}>HOD Message</label>
+        <textarea 
+          name="hodMessage"
+          defaultValue={initialData?.hodMessage}
+          style={styles.textarea}
+          required
+          placeholder="Enter HOD's message..."
+        />
+      </div>
+
+      <div style={styles.formRow}>
+        <div style={{flex: 1, marginRight: '10px'}}>
+          <ImageUpload 
+            label="HOD Image"
+            name="hodImage"
+            initialImage={initialData?.hodImage?.url}
+            isRequired={!initialData}
+          />
+        </div>
+        <div style={{flex: 1, marginLeft: '10px'}}>
+          <ImageUpload 
+            label="Department Hero Image"
+            name="heroImage"
+            initialImage={initialData?.heroImage?.url}
+            isRequired={!initialData}
+          />
+        </div>
+      </div>
+
+      <div style={styles.formGroup}>
+        <label style={styles.label}>Mission Points</label>
+        {missionPoints.map((point, index) => (
+          <div key={index} style={{display: 'flex', alignItems: 'center', marginBottom: '8px'}}>
+            <input 
+              value={point}
+              onChange={(e) => {
+                const newPoints = [...missionPoints];
+                newPoints[index] = e.target.value;
+                setMissionPoints(newPoints);
+              }}
+              style={{...styles.input, flex: 1}}
+              placeholder={`Mission Point ${index + 1}`}
+            />
+            <button 
+              type="button"
+              onClick={() => removeMissionPoint(index)}
+              style={styles.removeButton}
+              title="Delete Point"
+            >
+              <TrashIcon />
+            </button>
+          </div>
+        ))}
+        <button type="button" onClick={addMissionPoint} style={styles.addButton}>
+          Add Mission Point
+        </button>
+      </div>
+
+      <div style={styles.formGroup}>
+        <label style={styles.label}>Faculty Members</label>
+        {faculty.map((member, index) => (
+          <div key={index} style={{...styles.formRow, marginBottom: '10px', borderBottom: '1px solid var(--border-color)', paddingBottom: '10px'}}>
+            <input 
+              type="number"
+              value={member.sno}
+              onChange={(e) => handleFacultyChange(index, 'sno', parseInt(e.target.value))}
+              style={{...styles.input, flex: 0.5, marginRight: '10px'}}
+              placeholder="S.No"
+            />
+            <input 
+              value={member.name}
+              onChange={(e) => handleFacultyChange(index, 'name', e.target.value)}
+              style={{...styles.input, flex: 2, marginRight: '10px'}}
+              placeholder="Faculty Name"
+            />
+            <input 
+              value={member.designation}
+              onChange={(e) => handleFacultyChange(index, 'designation', e.target.value)}
+              style={{...styles.input, flex: 2}}
+              placeholder="Designation"
+            />
+            <button 
+              type="button"
+              onClick={() => removeFaculty(index)}
+              style={styles.removeButton}
+              title="Delete Member"
+            >
+              <TrashIcon />
+            </button>
+          </div>
+        ))}
+        <button type="button" onClick={addFaculty} style={styles.addButton}>
+          Add Faculty Member
+        </button>
+      </div>
+
+      <div style={styles.formActions}>
+        <button type="submit" style={styles.submitButton}>
+          {initialData ? 'Update Department' : 'Add Department'}
+        </button>
+        <button type="button" onClick={onCancel} style={styles.cancelButton}>
+          Cancel
+        </button>
+      </div>
+    </form>
+  );
 };
 
 
-    const handleFacultyChange = (index: number, field: keyof FacultyMember, value: string | number) => { 
-        setFaculty(faculty.map((f, i) => i === index ? { ...f, [field]: value } : f)); 
-    };
 
-    const addFaculty = () => setFaculty([...faculty, { sno: faculty.length + 1, name: '', designation: '' }]);
-    const removeFaculty = (index: number) => setFaculty(faculty.filter((_, i) => i !== index));
-    const addMissionPoint = () => setMissionPoints([...missionPoints, '']);
-    const removeMissionPoint = (index: number) => setMissionPoints(missionPoints.filter((_, i) => i !== index));
 
-    return (
-        <form onSubmit={handleSubmit} style={styles.form}>
-            <div style={styles.formRow}>
-                <div style={{...styles.formGroup, flex: 1, marginRight: '10px'}}>
-                    <label style={styles.label}>Department Code (e.g., 'cse')</label>
-                    <input name="code" defaultValue={initialData?.code} style={styles.input} required disabled={!!initialData} />
-                </div>
-                <div style={{...styles.formGroup, flex: 1, marginLeft: '10px'}}>
-                    <label style={styles.label}>Department Name</label>
-                    <input name="name" defaultValue={initialData?.name} style={styles.input} required />
-                </div>
-            </div>
-            <div style={styles.formGroup}>
-                <label style={styles.label}>About Department</label>
-                <textarea name="about" defaultValue={initialData?.about} style={styles.textarea} required />
-            </div>
-            <div style={styles.formRow}>
-                <div style={{...styles.formGroup, flex: 1, marginRight: '10px'}}>
-                    <label style={styles.label}>HOD Name</label>
-                    <input name="hodName" defaultValue={initialData?.hodName} style={styles.input} required />
-                </div>
-                <div style={{...styles.formGroup, flex: 1, marginLeft: '10px'}}>
-                    <label style={styles.label}>Vision</label>
-                    <textarea name="vision" defaultValue={initialData?.vision} style={{...styles.textarea, minHeight: '52px'}} required />
-                </div>
-            </div>
-            <div style={styles.formGroup}>
-                <label style={styles.label}>HOD Message</label>
-                <textarea name="hodMessage" defaultValue={initialData?.hodMessage} style={styles.textarea} required />
-            </div>
-            <div style={styles.formRow}>
-                <div style={{flex: 1, marginRight: '10px'}}>
-                    <ImageUpload label="HOD Image" name="hodImage" initialImage={initialData?.hodImage ? `${initialData.hodImage.url}` : undefined} isRequired={!initialData} />
-                </div>
-                <div style={{flex: 1, marginLeft: '10px'}}>
-                    <ImageUpload label="Department Hero Image" name="heroImage" initialImage={initialData?.heroImage ? `${initialData.heroImage.url}` : undefined} isRequired={!initialData} />
-                </div>
-            </div>
-            <div style={styles.formGroup}>
-                <label style={styles.label}>Mission Points</label>
-                {missionPoints.map((point, index) => 
-                    (<div key={index} style={{display: 'flex', alignItems: 'center', marginBottom: '8px'}}>
-                        <input value={point} onChange={(e) => { const newPoints = [...missionPoints]; newPoints[index] = e.target.value; setMissionPoints(newPoints); }} style={{...styles.input, flex: 1}} placeholder={`Mission Point ${index + 1}`} />
-                        <button type="button" onClick={() => removeMissionPoint(index)} style={styles.removeButton} title="Delete Point"><TrashIcon /></button>
-                    </div>)
-                )}
-                <button type="button" onClick={addMissionPoint} style={styles.addButton}>Add Mission Point</button>
-            </div>
-            <div style={styles.formGroup}>
-                <label style={styles.label}>Faculty Members</label>
-                {faculty.map((member, index) =>
-                    (<div key={index} style={{...styles.formRow, marginBottom: '10px', borderBottom: '1px solid var(--border-color)', paddingBottom: '10px'}}>
-                        <input type="number" value={member.sno} onChange={(e) => handleFacultyChange(index, 'sno', parseInt(e.target.value))} style={{...styles.input, flex: 0.5, marginRight: '10px'}} placeholder="S.No" />
-                        <input value={member.name} onChange={(e) => handleFacultyChange(index, 'name', e.target.value)} style={{...styles.input, flex: 2, marginRight: '10px'}} placeholder="Faculty Name" />
-                        <input value={member.designation} onChange={(e) => handleFacultyChange(index, 'designation', e.target.value)} style={{...styles.input, flex: 2}} placeholder="Designation" />
-                        <button type="button" onClick={() => removeFaculty(index)} style={styles.removeButton} title="Delete Member"><TrashIcon /></button>
-                    </div>)
-                )}
-                <button type="button" onClick={addFaculty} style={styles.addButton}>Add Faculty Member</button>
-            </div>
-            <div style={styles.formActions}>
-                <button type="submit" style={styles.submitButton}>{initialData ? 'Update Department' : 'Add Department'}</button>
-                <button type="button" onClick={onCancel} style={styles.cancelButton}>Cancel</button>
-            </div>
-        </form>
-    );
-};
+
+
+
+
+// const DepartmentForm = ({ onFormSubmit, initialData, onCancel }: { 
+//     onFormSubmit: (data: FormData) => void; 
+//     initialData?: Department | HeroImage; 
+//     onCancel: () => void 
+// }) => {
+//     const [missionPoints, setMissionPoints] = useState<string[]>(['']);
+//     const [faculty, setFaculty] = useState<FacultyMember[]>([{sno: 1, name: '', designation: ''}]);
+
+//     useEffect(() => { 
+//         setMissionPoints(initialData?.mission); 
+//         setFaculty(initialData?.faculty); 
+//     }, [initialData]);
+//     // useEffect(() => { 
+//     //     if (initialData && isDepartment(initialData)) {
+//     //         setMissionPoints(initialData.mission || ['']); 
+//     //         setFaculty(initialData.faculty || [{ sno: 1, name: '', designation: '' }]); 
+//     //     } else {
+//     //         setMissionPoints(['']); 
+//     //         setFaculty([{ sno: 1, name: '', designation: '' }]); 
+//     //     }
+//     // }, [initialData]);
+   
+//     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => { 
+//     e.preventDefault(); 
+//     const formData = new FormData(e.currentTarget);
+
+//     // Only add mission if not empty
+//     if (missionPoints.length > 0) {
+//         formData.set('mission', JSON.stringify(missionPoints.filter(m => m)));
+//     }
+
+//     // Only add faculty entries with valid name & designation
+//     const validFaculty = faculty.filter(f => f.name && f.designation);
+//     if (validFaculty.length > 0) {
+//         formData.set('faculty', JSON.stringify(validFaculty));
+//     }
+
+//     console.log('Submitting Department Form:', Object.fromEntries(formData.entries()));
+//     onFormSubmit(formData); 
+// };
+
+
+//     const handleFacultyChange = (index: number, field: keyof FacultyMember, value: string | number) => { 
+//         setFaculty(faculty.map((f, i) => i === index ? { ...f, [field]: value } : f)); 
+//     };
+
+//     const addFaculty = () => setFaculty([...faculty, { sno: faculty.length + 1, name: '', designation: '' }]);
+//     const removeFaculty = (index: number) => setFaculty(faculty.filter((_, i) => i !== index));
+//     const addMissionPoint = () => setMissionPoints([...missionPoints, '']);
+//     const removeMissionPoint = (index: number) => setMissionPoints(missionPoints.filter((_, i) => i !== index));
+
+//     return (
+//         <form onSubmit={handleSubmit} style={styles.form}>
+//             <div style={styles.formRow}>
+//                 <div style={{...styles.formGroup, flex: 1, marginRight: '10px'}}>
+//                     <label style={styles.label}>Department Code (e.g., 'cse')</label>
+//                     <input name="code" defaultValue={initialData?.code} style={styles.input} required disabled={!!initialData} />
+//                 </div>
+//                 <div style={{...styles.formGroup, flex: 1, marginLeft: '10px'}}>
+//                     <label style={styles.label}>Department Name</label>
+//                     <input name="name" defaultValue={initialData?.name} style={styles.input} required />
+//                 </div>
+//             </div>
+//             <div style={styles.formGroup}>
+//                 <label style={styles.label}>About Department</label>
+//                 <textarea name="about" defaultValue={initialData?.about} style={styles.textarea} required />
+//             </div>
+//             <div style={styles.formRow}>
+//                 <div style={{...styles.formGroup, flex: 1, marginRight: '10px'}}>
+//                     <label style={styles.label}>HOD Name</label>
+//                     <input name="hodName" defaultValue={initialData?.hodName} style={styles.input} required />
+//                 </div>
+//                 <div style={{...styles.formGroup, flex: 1, marginLeft: '10px'}}>
+//                     <label style={styles.label}>Vision</label>
+//                     <textarea name="vision" defaultValue={initialData?.vision} style={{...styles.textarea, minHeight: '52px'}} required />
+//                 </div>
+//             </div>
+//             <div style={styles.formGroup}>
+//                 <label style={styles.label}>HOD Message</label>
+//                 <textarea name="hodMessage" defaultValue={initialData?.hodMessage} style={styles.textarea} required />
+//             </div>
+//             <div style={styles.formRow}>
+//                 <div style={{flex: 1, marginRight: '10px'}}>
+//                     <ImageUpload label="HOD Image" name="hodImage" initialImage={initialData?.hodImage ? `${initialData.hodImage.url}` : undefined} isRequired={!initialData} />
+//                 </div>
+//                 <div style={{flex: 1, marginLeft: '10px'}}>
+//                     <ImageUpload label="Department Hero Image" name="heroImage" initialImage={initialData?.heroImage ? `${initialData.heroImage.url}` : undefined} isRequired={!initialData} />
+//                 </div>
+//             </div>
+//             <div style={styles.formGroup}>
+//                 <label style={styles.label}>Mission Points</label>
+//                 {missionPoints.map((point, index) => 
+//                     (<div key={index} style={{display: 'flex', alignItems: 'center', marginBottom: '8px'}}>
+//                         <input value={point} onChange={(e) => { const newPoints = [...missionPoints]; newPoints[index] = e.target.value; setMissionPoints(newPoints); }} style={{...styles.input, flex: 1}} placeholder={`Mission Point ${index + 1}`} />
+//                         <button type="button" onClick={() => removeMissionPoint(index)} style={styles.removeButton} title="Delete Point"><TrashIcon /></button>
+//                     </div>)
+//                 )}
+//                 <button type="button" onClick={addMissionPoint} style={styles.addButton}>Add Mission Point</button>
+//             </div>
+//             <div style={styles.formGroup}>
+//                 <label style={styles.label}>Faculty Members</label>
+//                 {faculty.map((member, index) =>
+//                     (<div key={index} style={{...styles.formRow, marginBottom: '10px', borderBottom: '1px solid var(--border-color)', paddingBottom: '10px'}}>
+//                         <input type="number" value={member.sno} onChange={(e) => handleFacultyChange(index, 'sno', parseInt(e.target.value))} style={{...styles.input, flex: 0.5, marginRight: '10px'}} placeholder="S.No" />
+//                         <input value={member.name} onChange={(e) => handleFacultyChange(index, 'name', e.target.value)} style={{...styles.input, flex: 2, marginRight: '10px'}} placeholder="Faculty Name" />
+//                         <input value={member.designation} onChange={(e) => handleFacultyChange(index, 'designation', e.target.value)} style={{...styles.input, flex: 2}} placeholder="Designation" />
+//                         <button type="button" onClick={() => removeFaculty(index)} style={styles.removeButton} title="Delete Member"><TrashIcon /></button>
+//                     </div>)
+//                 )}
+//                 <button type="button" onClick={addFaculty} style={styles.addButton}>Add Faculty Member</button>
+//             </div>
+//             <div style={styles.formActions}>
+//                 <button type="submit" style={styles.submitButton}>{initialData ? 'Update Department' : 'Add Department'}</button>
+//                 <button type="button" onClick={onCancel} style={styles.cancelButton}>Cancel</button>
+//             </div>
+//         </form>
+//     );
+// };
+
+
+
+
+
+
+// const DepartmentForm = ({ onFormSubmit, initialData, onCancel }: { 
+//     onFormSubmit: (data: FormData) => void; 
+//     initialData?: Department | null; 
+//     onCancel: () => void 
+// }) => {
+//     const [missionPoints, setMissionPoints] = useState<string[]>([]);
+//     const [faculty, setFaculty] = useState<FacultyMember[]>([]);
+
+//     useEffect(() => { 
+//         if (initialData && isDepartment(initialData)) {
+//             setMissionPoints(initialData.mission || ['']); 
+//             setFaculty(initialData.faculty || [{ sno: 1, name: '', designation: '' }]); 
+//         } else {
+//             setMissionPoints(['']); 
+//             setFaculty([{ sno: 1, name: '', designation: '' }]); 
+//         }
+//     }, [initialData]);
+
+//     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => { 
+//         e.preventDefault(); 
+//         const formData = new FormData(e.currentTarget); 
+//         formData.append('mission', JSON.stringify(missionPoints.filter(m => m))); 
+//         formData.append('faculty', JSON.stringify(faculty.filter(f => f.name && f.designation))); 
+//         onFormSubmit(formData); 
+//     };
+
+//     const handleFacultyChange = (index: number, field: keyof FacultyMember, value: string | number) => { 
+//         setFaculty(faculty.map((f, i) => i === index ? { ...f, [field]: value } : f)); 
+//     };
+
+//     const addFaculty = () => setFaculty([...faculty, { sno: faculty.length + 1, name: '', designation: '' }]);
+//     const removeFaculty = (index: number) => setFaculty(faculty.filter((_, i) => i !== index));
+//     const addMissionPoint = () => setMissionPoints([...missionPoints, '']);
+//     const removeMissionPoint = (index: number) => setMissionPoints(missionPoints.filter((_, i) => i !== index));
+
+//     return (
+//         <form onSubmit={handleSubmit} style={styles.form}>
+//             <div style={styles.formRow}>
+//                 <div style={{...styles.formGroup, flex: 1, marginRight: '10px'}}>
+//                     <label style={styles.label}>Department Code (e.g., 'cse')</label>
+//                     <input name="code" defaultValue={isDepartment(initialData) ? initialData.code : ''} style={styles.input} required disabled={!!initialData} />
+//                 </div>
+//                 <div style={{...styles.formGroup, flex: 1, marginLeft: '10px'}}>
+//                     <label style={styles.label}>Department Name</label>
+//                     <input name="name" defaultValue={isDepartment(initialData) ? initialData.name : ''} style={styles.input} required />
+//                 </div>
+//             </div>
+//             <div style={styles.formGroup}>
+//                 <label style={styles.label}>About Department</label>
+//                 <textarea name="about" defaultValue={isDepartment(initialData) ? initialData.about : ''} style={styles.textarea} required />
+//             </div>
+//             <div style={styles.formRow}>
+//                 <div style={{...styles.formGroup, flex: 1, marginRight: '10px'}}>
+//                     <label style={styles.label}>HOD Name</label>
+//                     <input name="hodName" defaultValue={isDepartment(initialData) ? initialData.hodName : ''} style={styles.input} required />
+//                 </div>
+//                 <div style={{...styles.formGroup, flex: 1, marginLeft: '10px'}}>
+//                     <label style={styles.label}>Vision</label>
+//                     <textarea name="vision" defaultValue={isDepartment(initialData) ? initialData.vision : ''} style={{...styles.textarea, minHeight: '52px'}} required />
+//                 </div>
+//             </div>
+//             <div style={styles.formGroup}>
+//                 <label style={styles.label}>HOD Message</label>
+//                 <textarea name="hodMessage" defaultValue={isDepartment(initialData) ? initialData.hodMessage : ''} style={styles.textarea} required />
+//             </div>
+//             <div style={styles.formRow}>
+//                 <div style={{flex: 1, marginRight: '10px'}}>
+//                     <ImageUpload label="HOD Image" name="hodImage" initialImage={isDepartment(initialData) && initialData.hodImage ? `${API_BASE_URL}/uploads/${initialData.hodImage}`: undefined} isRequired={!initialData} />
+//                 </div>
+//                 <div style={{flex: 1, marginLeft: '10px'}}>
+//                     <ImageUpload label="Department Hero Image" name="heroImage" initialImage={isDepartment(initialData) && initialData.heroImage ? `${API_BASE_URL}/uploads/${initialData.heroImage}` : undefined} isRequired={!initialData} />
+//                 </div>
+//             </div>
+//             <div style={styles.formGroup}>
+//                 <label style={styles.label}>Mission Points</label>
+//                 {missionPoints.map((point, index) => 
+//                     (<div key={index} style={{display: 'flex', alignItems: 'center', marginBottom: '8px'}}>
+//                         <input value={point} onChange={(e) => { const newPoints = [...missionPoints]; newPoints[index] = e.target.value; setMissionPoints(newPoints); }} style={{...styles.input, flex: 1}} placeholder={`Mission Point ${index + 1}`} />
+//                         <button type="button" onClick={() => removeMissionPoint(index)} style={styles.removeButton} title="Delete Point"><TrashIcon /></button>
+//                     </div>)
+//                 )}
+//                 <button type="button" onClick={addMissionPoint} style={styles.addButton}>Add Mission Point</button>
+//             </div>
+//             <div style={styles.formGroup}>
+//                 <label style={styles.label}>Faculty Members</label>
+//                 {faculty.map((member, index) =>
+//                     (<div key={index} style={{...styles.formRow, marginBottom: '10px', borderBottom: '1px solid var(--border-color)', paddingBottom: '10px'}}>
+//                         <input type="number" value={member.sno} onChange={(e) => handleFacultyChange(index, 'sno', parseInt(e.target.value))} style={{...styles.input, flex: 0.5, marginRight: '10px'}} placeholder="S.No" />
+//                         <input value={member.name} onChange={(e) => handleFacultyChange(index, 'name', e.target.value)} style={{...styles.input, flex: 2, marginRight: '10px'}} placeholder="Faculty Name" />
+//                         <input value={member.designation} onChange={(e) => handleFacultyChange(index, 'designation', e.target.value)} style={{...styles.input, flex: 2}} placeholder="Designation" />
+//                         <button type="button" onClick={() => removeFaculty(index)} style={styles.removeButton} title="Delete Member"><TrashIcon /></button>
+//                     </div>)
+//                 )}
+//                 <button type="button" onClick={addFaculty} style={styles.addButton}>Add Faculty Member</button>
+//             </div>
+//             <div style={styles.formActions}>
+//                 <button type="submit" style={styles.submitButton}>{initialData ? 'Update Department' : 'Add Department'}</button>
+//                 <button type="button" onClick={onCancel} style={styles.cancelButton}>Cancel</button>
+//             </div>
+//         </form>
+//     );
+// };
 
 const NewsEventForm = ({ onFormSubmit, initialData, onCancel }: { onFormSubmit: (data: FormData) => void; initialData?: NewsEvent | null; onCancel: () => void }) => {
     return (
@@ -499,7 +867,7 @@ const AdminDashboard = () => {
         try {
             const listRoute = config.endpoint === 'department' ? 'list' : 'list';
             const response = await fetch(`${API_BASE_URL}/api/${config.endpoint}/${listRoute}`);
-            if (!response.ok) throw new Error(`Failed to fetch ${menu}`);
+            // if (!response.ok) throw new Error(`Failed to fetch ${menu}`);
             const data = await response.json();
             console.log(data);
             setItems(Array.isArray(data) ? data : []);
