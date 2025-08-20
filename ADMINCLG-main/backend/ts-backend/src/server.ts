@@ -93,6 +93,7 @@ app.use((req, res, next) => {
 // app.use(cors({ origin: true, credentials: true }));
 app.use(cors({
   origin: [
+    'https://vignanwebsite.vercel.app',
     'https://vignansfrontendadmin.vercel.app',
     'https://viitadminfrontend.onrender.com',
     'http://localhost:5173'
