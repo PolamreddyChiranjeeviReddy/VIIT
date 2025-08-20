@@ -10,7 +10,7 @@ import { StoreContext } from '../context/StoreContext';
 //     return 'code' in item && 'mission' in item && 'faculty' in item;
 // };
 // --- API Configuration ---
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000'; // IMPORTANT: Change to your backend URL
+const API_BASE_URL = import.meta.env.VITE_API_URL; // IMPORTANT: Change to your backend URL
 
 // --- SVG Icons ---
 const Logo = () => <img src="https://upload.wikimedia.org/wikipedia/commons/a/ae/Vignan_logo.png" alt="Vignan's Logo" style={{ height: '45px', width: 'auto' }} />;
