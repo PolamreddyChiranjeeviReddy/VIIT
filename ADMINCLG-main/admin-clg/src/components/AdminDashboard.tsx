@@ -165,7 +165,7 @@ const DepartmentForm = ({ onFormSubmit, initialData, onCancel }: DepartmentFormP
             defaultValue={initialData?.code}
             style={styles.input}
             required
-            disabled={!!initialData}
+            // disabled={!!initialData}
             placeholder="e.g., cse"
           />
         </div>
