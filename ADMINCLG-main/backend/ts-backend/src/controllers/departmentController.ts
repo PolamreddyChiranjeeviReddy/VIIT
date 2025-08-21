@@ -500,7 +500,7 @@ export const addDepartment = async (req: Request, res: Response) => {
 export const updateDepartmentByCode = async (req: Request, res: Response) => {
   try {
     const { _id } = req.params;
-    const { name, about, hodName, hodMessage, vision, mission, faculty } = req.body;
+    const { code,name, about, hodName, hodMessage, vision, mission, faculty } = req.body;
     const files = req.files as UploadedFiles;
     const heroImage = files?.heroImage?.[0];
     const hodImage  = files?.hodImage?.[0];
@@ -510,6 +510,7 @@ export const updateDepartmentByCode = async (req: Request, res: Response) => {
     }
 
     // Update basic fields
+    department.code = code || department.code;
     department.name = name || department.name;
     department.about = about || department.about;
     department.hodName = hodName || department.hodName;
