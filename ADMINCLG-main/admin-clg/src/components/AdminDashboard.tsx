@@ -343,7 +343,7 @@ const NewsEventForm = ({ onFormSubmit, initialData, onCancel }: { onFormSubmit: 
                 </div>
             </div>
             <div style={styles.formRow}><div style={{...styles.formGroup, flex: 1, marginRight: '10px'}}><label style={styles.label}>Date</label><input name="date" type="date" defaultValue={initialData?.date ? new Date(initialData.date).toISOString().split('T')[0] : ''} style={styles.input} required /></div><div style={{...styles.formGroup, flex: 1, marginLeft: '10px'}}><ColorPicker name="bgColor" initialValue={initialData?.bgColor} /></div></div>
-            <ImageUpload label="Event/News Image" name="image" initialImage={initialData.image}  isRequired={!initialData} />
+            <ImageUpload label="Event/News Image" name="image" initialImage={initialData?.image}  isRequired={!initialData} />
             <div style={styles.formGroup}><label style={styles.label}>Description</label><textarea name="description" defaultValue={initialData?.description} style={styles.textarea} required /></div>
         <div style={styles.formGroup}>
         <label style={styles.label}>Path (URL)</label>
