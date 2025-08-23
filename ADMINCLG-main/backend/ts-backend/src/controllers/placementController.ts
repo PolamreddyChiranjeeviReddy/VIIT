@@ -41,7 +41,7 @@ export const getAllPlacements = async (_req: Request, res: Response) => {
       company: placement.company,
       package: placement.package,
       image: `data:${placement.contentType};base64,${placement.image.toString("base64")}`,
-      companyLogo: `data:${placement.contentType};base64,${placement.image.toString("base64")}`,
+      companyLogo: `data:${placement.contentType};base64,${placement.companyLogo.toString("base64")}`,
     }));
 
     return res.status(200).json(formatted);
