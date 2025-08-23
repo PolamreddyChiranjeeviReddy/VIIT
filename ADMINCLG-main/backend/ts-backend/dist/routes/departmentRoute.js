@@ -149,77 +149,111 @@ Object.defineProperty(exports, "__esModule", { value: true });
 // router.delete('/delete/:_id', deleteDepartment);
 // export default router;
 // routes/departmentRoute.ts
+// import express, { Request, Response, NextFunction } from "express";
+// import multer, { FileFilterCallback } from "multer";
+// import { CloudinaryStorage } from "multer-storage-cloudinary";
+// import cloudinary from "../config/cloudinary";
+// import {
+//   addDepartment,
+//   updateDepartmentByCode,
+//   getDepartmentByCode,
+//   getDepartment,
+//   deleteDepartment,
+// } from "../controllers/departmentController";
+// const router = express.Router();
+// // --- Utility to sanitize filenames ---
+// const sanitizeFileName = (filename: string): string => {
+//   return filename
+//     .toLowerCase()
+//     .replace(/[^a-z0-9.]/g, "-") // Replace non-alphanumeric chars with dash
+//     .replace(/^-+|-+$/g, "") // Remove leading/trailing dashes
+//     .replace(/\..*$/, ""); // Remove file extension
+// };
+// // --- Cloudinary storage configuration ---
+// const storage = new CloudinaryStorage({
+//   cloudinary,
+//   params: async (_req, file) => {
+//     const cleanName = sanitizeFileName(file.originalname);
+//     const uniqueId = Date.now();
+//     const randomNum = Math.round(Math.random() * 1e9);
+//     return {
+//       folder: "departments",
+//       resource_type: "image",
+//       allowed_formats: ["jpg", "jpeg", "png"],
+//       public_id: `${uniqueId}-${randomNum}-${cleanName}`,
+//       quality: "auto:best",
+//       use_filename: true,
+//       unique_filename: true,
+//     };
+//   },
+// });
+// // --- File validation ---
+// const fileFilter = (
+//   _req: Request,
+//   file: Express.Multer.File,
+//   cb: FileFilterCallback
+// ): void => {
+//   const allowedMimes = ["image/jpeg", "image/png", "image/jpg"];
+//   if (!allowedMimes.includes(file.mimetype)) {
+//     return cb(new Error("Invalid file type. Only JPG and PNG allowed."));
+//   }
+//   cb(null, true);
+// };
+// // --- Multer instance ---
+// const upload = multer({
+//   storage,
+//   fileFilter,
+//   limits: {
+//     fileSize: 5 * 1024 * 1024, // 5MB limit
+//   },
+// });
+// // --- Routes ---
+// router.get("/list/:code", getDepartmentByCode);
+// router.get("/list", getDepartment);
+// // Upload middleware for addDepartment
+// const uploadMiddleware = upload.fields([
+//   { name: "heroImage", maxCount: 1 },
+//   { name: "hodImage", maxCount: 1 },
+// ]);
+// router.post(
+//   "/add",
+//   (req: Request, res: Response, next: NextFunction) => {
+//     uploadMiddleware(req, res, (err: unknown) => {
+//       if (err instanceof multer.MulterError) {
+//         return res.status(400).json({ error: `Upload error: ${err.message}` });
+//       } else if (err instanceof Error) {
+//         return res.status(500).json({ error: `Upload error: ${err.message}` });
+//       }
+//       next();
+//     });
+//   },
+//   addDepartment
+// );
+// router.put(
+//   "/update/:_id",
+//   upload.fields([
+//     { name: "heroImage", maxCount: 1 },
+//     { name: "hodImage", maxCount: 1 },
+//   ]),
+//   updateDepartmentByCode
+// );
+// router.delete("/delete/:_id", deleteDepartment);
+// export default router;
 const express_1 = __importDefault(require("express"));
 const multer_1 = __importDefault(require("multer"));
-const multer_storage_cloudinary_1 = require("multer-storage-cloudinary");
-const cloudinary_1 = __importDefault(require("../config/cloudinary"));
 const departmentController_1 = require("../controllers/departmentController");
 const router = express_1.default.Router();
-// --- Utility to sanitize filenames ---
-const sanitizeFileName = (filename) => {
-    return filename
-        .toLowerCase()
-        .replace(/[^a-z0-9.]/g, "-") // Replace non-alphanumeric chars with dash
-        .replace(/^-+|-+$/g, "") // Remove leading/trailing dashes
-        .replace(/\..*$/, ""); // Remove file extension
-};
-// --- Cloudinary storage configuration ---
-const storage = new multer_storage_cloudinary_1.CloudinaryStorage({
-    cloudinary: cloudinary_1.default,
-    params: async (_req, file) => {
-        const cleanName = sanitizeFileName(file.originalname);
-        const uniqueId = Date.now();
-        const randomNum = Math.round(Math.random() * 1e9);
-        return {
-            folder: "departments",
-            resource_type: "image",
-            allowed_formats: ["jpg", "jpeg", "png"],
-            public_id: `${uniqueId}-${randomNum}-${cleanName}`,
-            quality: "auto:best",
-            use_filename: true,
-            unique_filename: true,
-        };
-    },
-});
-// --- File validation ---
-const fileFilter = (_req, file, cb) => {
-    const allowedMimes = ["image/jpeg", "image/png", "image/jpg"];
-    if (!allowedMimes.includes(file.mimetype)) {
-        return cb(new Error("Invalid file type. Only JPG and PNG allowed."));
-    }
-    cb(null, true);
-};
-// --- Multer instance ---
-const upload = (0, multer_1.default)({
-    storage,
-    fileFilter,
-    limits: {
-        fileSize: 5 * 1024 * 1024, // 5MB limit
-    },
-});
-// --- Routes ---
-router.get("/list/:code", departmentController_1.getDepartmentByCode);
+const upload = (0, multer_1.default)(); // stores files in memory (buffer)
+router.post("/add", upload.fields([
+    { name: 'heroImage', maxCount: 1 },
+    { name: 'hodImage', maxCount: 1 }
+]), departmentController_1.createDepartment);
 router.get("/list", departmentController_1.getDepartment);
-// Upload middleware for addDepartment
-const uploadMiddleware = upload.fields([
-    { name: "heroImage", maxCount: 1 },
-    { name: "hodImage", maxCount: 1 },
-]);
-router.post("/add", (req, res, next) => {
-    uploadMiddleware(req, res, (err) => {
-        if (err instanceof multer_1.default.MulterError) {
-            return res.status(400).json({ error: `Upload error: ${err.message}` });
-        }
-        else if (err instanceof Error) {
-            return res.status(500).json({ error: `Upload error: ${err.message}` });
-        }
-        next();
-    });
-}, departmentController_1.addDepartment);
 router.put("/update/:_id", upload.fields([
-    { name: "heroImage", maxCount: 1 },
-    { name: "hodImage", maxCount: 1 },
+    { name: 'heroImage', maxCount: 1 },
+    { name: 'hodImage', maxCount: 1 }
 ]), departmentController_1.updateDepartmentByCode);
+router.get("/list/:code", departmentController_1.getDepartmentByCode);
 router.delete("/delete/:_id", departmentController_1.deleteDepartment);
 exports.default = router;
 //# sourceMappingURL=departmentRoute.js.map

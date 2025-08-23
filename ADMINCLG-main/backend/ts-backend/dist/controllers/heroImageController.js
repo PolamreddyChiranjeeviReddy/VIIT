@@ -3,145 +3,105 @@
 // import HeroImage from "../models/heroImageModel";
 // import path from 'path';
 // import fs from 'fs';
-var __importDefault = (this && this.__importDefault) || function (mod) {
-    return (mod && mod.__esModule) ? mod : { "default": mod };
-};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteHeroImage = exports.getHeroImages = exports.updateHeroImage = exports.createHeroImage = void 0;
-const heroImageModel_1 = __importDefault(require("../models/heroImageModel"));
-const cloudinary_1 = __importDefault(require("../config/cloudinary"));
+exports.deleteHeroImage = exports.updateHeroImage = exports.getHeroImages = exports.createHeroImage = void 0;
+const heroImageModel_1 = require("../models/heroImageModel");
+// Upload (Create)
 const createHeroImage = async (req, res) => {
     try {
-        const { title } = req.body;
-        const files = req.files;
-        const desktopFile = files?.desktopImage?.[0];
-        const mobileFile = files?.mobileImage?.[0];
-        if (!desktopFile || !mobileFile) {
-            return res.status(400).json({ message: "Both images are required." });
+        if (!req.file) {
+            res.status(400).json({ message: "No image uploaded" });
+            return;
         }
-        const newImage = new heroImageModel_1.default({
-            title,
-            desktopImage: {
-                url: desktopFile.path,
-                public_id: desktopFile.filename,
-            },
-            mobileImage: {
-                url: mobileFile.path,
-                public_id: mobileFile.filename,
-            },
+        const newImage = new heroImageModel_1.HeroImage({
+            number: req.body.number,
+            image: req.file.buffer,
+            contentType: req.file.mimetype,
         });
         await newImage.save();
-        return res.status(201).json(newImage);
+        res.status(201).json({ message: "Hero image uploaded successfully", image: newImage });
     }
-    catch (err) {
-        console.error("createHeroImage error:", err);
-        return res.status(500).json({ error: err.message || "Failed to upload hero image" });
+    catch (error) {
+        res.status(500).json({ message: "Error uploading image", error });
     }
 };
 exports.createHeroImage = createHeroImage;
-const updateHeroImage = async (req, res) => {
+// Get all
+// export const getHeroImages = async (_req: Request, res: Response): Promise<void> => {
+//   try {
+//     const images = await HeroImage.find().sort({ number: 1 });
+//     res.json(images);
+//   } catch (error) {
+//     res.status(500).json({ message: "Error fetching images", error });
+//   }
+// };
+const getHeroImages = async (req, res) => {
     try {
-        const { _id } = req.params;
-        const { title } = req.body;
-        const doc = await heroImageModel_1.default.findById(_id);
-        if (!doc)
-            return res.status(404).json({ error: "Hero Image not found" });
-        if (title)
-            doc.title = title;
-        const files = req.files;
-        const desktopFile = files?.desktopImage?.[0];
-        const mobileFile = files?.mobileImage?.[0];
-        // Replace desktop image
-        if (desktopFile) {
-            // remove old from cloudinary
-            await cloudinary_1.default.uploader.destroy(doc.desktopImage.public_id);
-            doc.desktopImage = {
-                url: desktopFile.path,
-                public_id: desktopFile.filename,
-            };
-        }
-        // Replace mobile image
-        if (mobileFile) {
-            await cloudinary_1.default.uploader.destroy(doc.mobileImage.public_id);
-            doc.mobileImage = {
-                url: mobileFile.path,
-                public_id: mobileFile.filename,
-            };
-        }
-        const updated = await doc.save();
-        return res.status(200).json(updated);
+        const images = await heroImageModel_1.HeroImage.find().sort({ number: 1 });
+        const formatted = images.map((img) => ({
+            _id: img._id,
+            number: img.number,
+            image: `data:${img.contentType};base64,${img.image.toString("base64")}`
+        }));
+        res.json(formatted);
     }
-    catch (err) {
-        console.error("updateHeroImage error:", err);
-        return res.status(500).json({ error: err.message || "Something went wrong while updating" });
-    }
-};
-exports.updateHeroImage = updateHeroImage;
-// Get all hero images
-const getHeroImages = async (_req, res) => {
-    try {
-        const images = await heroImageModel_1.default.find();
-        res.json(images);
-    }
-    catch (err) {
-        res.status(500).json({ error: "Failed to fetch hero images" });
+    catch (error) {
+        res.status(500).json({ message: "Failed to fetch images", error: error.message });
     }
 };
 exports.getHeroImages = getHeroImages;
-// Update hero image
-// export const updateHeroImage = async (req: Request, res: Response) => {
-//   try {
-//     const { _id } = req.params;
-//     const { title } = req.body;
-//     const heroImage = await HeroImage.findById(_id);
-//     if (!heroImage) {
-//       return res.status(404).json({ error: "Hero Image not found" });
-//     }
-//     heroImage.title = title || heroImage.title;
-//     const desktopImage = req.files && 'desktopImage' in req.files ? req.files['desktopImage'][0].filename : undefined;
-//     const mobileImage = req.files && 'mobileImage' in req.files ? req.files['mobileImage'][0].filename : undefined;
-//     // Replace desktopImage
-//     if (desktopImage) {
-//       // Delete old from cloudinary
-//       await cloudinary.uploader.destroy(heroImage.desktopImage.public_id);
-//       // const desktopImage = req.files["desktopImage"][0] as any;
-//       const deskImage = desktopImage as any;
-//       heroImage.desktopImage = {
-//         url: deskImage.path,
-//         public_id: deskImage.filename,
-//       };
-//     }
-//     // Replace mobileImage
-//     if (mobileImage) {
-//       await cloudinary.uploader.destroy(heroImage.mobileImage.public_id);
-//       const mobImage = mobileImage as any;
-//       heroImage.mobileImage = {
-//         url: mobImage.path,
-//         public_id: mobImage.filename,
-//       };
-//     }
-//     const updated = await heroImage.save();
-//     res.status(200).json(updated);
-//   } catch (err: any) {
-//     console.error("Update error:", err);
-//     res.status(500).json({ error: err.message || "Something went wrong while updating" });
-//   }
-// };
-// Delete hero image
+// const department = new departmentModel({
+//       code,
+//       name,
+//       heroImage: {
+//         url: heroImage.path,
+//         public_id: heroImage.filename,
+//       },
+//       about,
+//       hodMessage,
+//       hodName,
+//       hodImage: {
+//         url: hodImage.path,
+//         public_id: hodImage.filename,
+//       },
+//       vision,
+//       mission: parsedMission,
+//       faculty: parsedFaculty
+//     });
+// Update
+const updateHeroImage = async (req, res) => {
+    try {
+        const updateData = {};
+        if (req.body.number)
+            updateData.number = req.body.number;
+        if (req.file) {
+            updateData.image = req.file.buffer;
+            updateData.contentType = req.file.mimetype;
+        }
+        const updated = await heroImageModel_1.HeroImage.findByIdAndUpdate(req.params._id, updateData, { new: true });
+        if (!updated) {
+            res.status(404).json({ message: "Hero image not found" });
+            return;
+        }
+        res.json({ message: "Hero image updated successfully", image: updated });
+    }
+    catch (error) {
+        res.status(500).json({ message: "Error updating image", error });
+    }
+};
+exports.updateHeroImage = updateHeroImage;
+// Delete
 const deleteHeroImage = async (req, res) => {
     try {
-        const { _id } = req.params;
-        const heroImage = await heroImageModel_1.default.findById(_id);
-        if (!heroImage)
-            return res.status(404).json({ message: "Hero image not found" });
-        // Delete from cloudinary
-        await cloudinary_1.default.uploader.destroy(heroImage.desktopImage.public_id);
-        await cloudinary_1.default.uploader.destroy(heroImage.mobileImage.public_id);
-        await heroImage.deleteOne();
-        res.status(200).json({ message: "Hero image deleted successfully" });
+        const deleted = await heroImageModel_1.HeroImage.findByIdAndDelete(req.params.id);
+        if (!deleted) {
+            res.status(404).json({ message: "Hero image not found" });
+            return;
+        }
+        res.json({ message: "Hero image deleted successfully" });
     }
-    catch (err) {
-        res.status(500).json({ error: err });
+    catch (error) {
+        res.status(500).json({ message: "Error deleting image", error });
     }
 };
 exports.deleteHeroImage = deleteHeroImage;

@@ -408,7 +408,7 @@ const AdminLogin = () => {
     const onChangeHandler = (event: React.ChangeEvent<HTMLInputElement>) => {
         const name = event.target.name
         const value = event.target.value
-        console.log(name,value);
+        // console.log(name,value);
         setData(data => ({ ...data, [name]: value }))
     }
 
@@ -419,23 +419,23 @@ const AdminLogin = () => {
 
   try {
     const response = await axios.post(new_url, data);
-      console.log("hello");
+      // console.log("hello");
     if (response.data.success) {
       setLoginEmail(data.email); // Store email in context
       setToken(response.data.token);
       localStorage.setItem("token", response.data.token);
       setRender(true);
       // { render ? navigate('/admin/dashboard') : null };
-      console.log(render);
+      // console.log(render);
       navigate('/admin/dashboard');
 
-      console.log(token);
+      // console.log(token);
     } else {
       toast.error(response.data.message || "Login failed");
     }
 
   } catch (error) {
-    console.error("Login Error:");
+    // console.error("Login Error:");
     const msg = (error as any).response?.data?.message || "Something went wrong";
     toast.error(msg);
   }

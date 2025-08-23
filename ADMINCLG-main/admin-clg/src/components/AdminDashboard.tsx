@@ -74,11 +74,11 @@ interface FacultyMember { sno: number; name: string; designation: string; }
 // interface HodImage { url: string; public_id: string; }
 // interface HerImage { url: string; public_id: string; }
 interface ImageFile { url: string; public_id: string; }
-interface Department { _id: string; code: string; name: string; about: string; hodMessage: string; hodName: string; hodImage: ImageFile; heroImage: ImageFile; vision: string; mission: string[]; faculty: FacultyMember[]; }
-interface NewsEvent { _id: string; type: string; title: string; date: string; description: string; pathlink: string; image: ImageFile; bgColor: string; }
-interface HeroImage { _id: string; title: string; desktopImage: ImageFile; mobileImage: ImageFile; }
+interface Department { _id: string; code: string; name: string; about: string; hodMessage: string; hodName: string; hodImage: Buffer; heroImage: Buffer; vision: string; mission: string[]; faculty: FacultyMember[]; }
+interface NewsEvent { _id: string; type: string; title: string; date: string; description: string; pathlink: string; image: Buffer; bgColor: string; }
+interface HeroImage { number: string; image: Buffer }
 interface Announcement {_id: string; date: string; title: string; path: string; description: string;}
-interface Placement {_id:string; student: string; company: string; package: string; image: ImageFile; companyLogo: ImageFile;}
+interface Placement {_id:string; student: string; company: string; package: string; image: Buffer; companyLogo: Buffer;}
 
 // --- FORM COMPONENTS ---
 
@@ -231,7 +231,7 @@ const DepartmentForm = ({ onFormSubmit, initialData, onCancel }: DepartmentFormP
           <ImageUpload 
             label="HOD Image"
             name="hodImage"
-            initialImage={initialData?.hodImage?.url}
+            initialImage={initialData?.hodImage}
             isRequired={!initialData}
           />
         </div>
@@ -239,7 +239,7 @@ const DepartmentForm = ({ onFormSubmit, initialData, onCancel }: DepartmentFormP
           <ImageUpload 
             label="Department Hero Image"
             name="heroImage"
-            initialImage={initialData?.heroImage?.url}
+            initialImage={initialData?.heroImage}
             isRequired={!initialData}
           />
         </div>
@@ -325,239 +325,6 @@ const DepartmentForm = ({ onFormSubmit, initialData, onCancel }: DepartmentFormP
 };
 
 
-
-
-
-
-
-
-// const DepartmentForm = ({ onFormSubmit, initialData, onCancel }: { 
-//     onFormSubmit: (data: FormData) => void; 
-//     initialData?: Department | HeroImage; 
-//     onCancel: () => void 
-// }) => {
-//     const [missionPoints, setMissionPoints] = useState<string[]>(['']);
-//     const [faculty, setFaculty] = useState<FacultyMember[]>([{sno: 1, name: '', designation: ''}]);
-
-//     useEffect(() => { 
-//         setMissionPoints(initialData?.mission); 
-//         setFaculty(initialData?.faculty); 
-//     }, [initialData]);
-//     // useEffect(() => { 
-//     //     if (initialData && isDepartment(initialData)) {
-//     //         setMissionPoints(initialData.mission || ['']); 
-//     //         setFaculty(initialData.faculty || [{ sno: 1, name: '', designation: '' }]); 
-//     //     } else {
-//     //         setMissionPoints(['']); 
-//     //         setFaculty([{ sno: 1, name: '', designation: '' }]); 
-//     //     }
-//     // }, [initialData]);
-   
-//     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => { 
-//     e.preventDefault(); 
-//     const formData = new FormData(e.currentTarget);
-
-//     // Only add mission if not empty
-//     if (missionPoints.length > 0) {
-//         formData.set('mission', JSON.stringify(missionPoints.filter(m => m)));
-//     }
-
-//     // Only add faculty entries with valid name & designation
-//     const validFaculty = faculty.filter(f => f.name && f.designation);
-//     if (validFaculty.length > 0) {
-//         formData.set('faculty', JSON.stringify(validFaculty));
-//     }
-
-//     console.log('Submitting Department Form:', Object.fromEntries(formData.entries()));
-//     onFormSubmit(formData); 
-// };
-
-
-//     const handleFacultyChange = (index: number, field: keyof FacultyMember, value: string | number) => { 
-//         setFaculty(faculty.map((f, i) => i === index ? { ...f, [field]: value } : f)); 
-//     };
-
-//     const addFaculty = () => setFaculty([...faculty, { sno: faculty.length + 1, name: '', designation: '' }]);
-//     const removeFaculty = (index: number) => setFaculty(faculty.filter((_, i) => i !== index));
-//     const addMissionPoint = () => setMissionPoints([...missionPoints, '']);
-//     const removeMissionPoint = (index: number) => setMissionPoints(missionPoints.filter((_, i) => i !== index));
-
-//     return (
-//         <form onSubmit={handleSubmit} style={styles.form}>
-//             <div style={styles.formRow}>
-//                 <div style={{...styles.formGroup, flex: 1, marginRight: '10px'}}>
-//                     <label style={styles.label}>Department Code (e.g., 'cse')</label>
-//                     <input name="code" defaultValue={initialData?.code} style={styles.input} required disabled={!!initialData} />
-//                 </div>
-//                 <div style={{...styles.formGroup, flex: 1, marginLeft: '10px'}}>
-//                     <label style={styles.label}>Department Name</label>
-//                     <input name="name" defaultValue={initialData?.name} style={styles.input} required />
-//                 </div>
-//             </div>
-//             <div style={styles.formGroup}>
-//                 <label style={styles.label}>About Department</label>
-//                 <textarea name="about" defaultValue={initialData?.about} style={styles.textarea} required />
-//             </div>
-//             <div style={styles.formRow}>
-//                 <div style={{...styles.formGroup, flex: 1, marginRight: '10px'}}>
-//                     <label style={styles.label}>HOD Name</label>
-//                     <input name="hodName" defaultValue={initialData?.hodName} style={styles.input} required />
-//                 </div>
-//                 <div style={{...styles.formGroup, flex: 1, marginLeft: '10px'}}>
-//                     <label style={styles.label}>Vision</label>
-//                     <textarea name="vision" defaultValue={initialData?.vision} style={{...styles.textarea, minHeight: '52px'}} required />
-//                 </div>
-//             </div>
-//             <div style={styles.formGroup}>
-//                 <label style={styles.label}>HOD Message</label>
-//                 <textarea name="hodMessage" defaultValue={initialData?.hodMessage} style={styles.textarea} required />
-//             </div>
-//             <div style={styles.formRow}>
-//                 <div style={{flex: 1, marginRight: '10px'}}>
-//                     <ImageUpload label="HOD Image" name="hodImage" initialImage={initialData?.hodImage ? `${initialData.hodImage.url}` : undefined} isRequired={!initialData} />
-//                 </div>
-//                 <div style={{flex: 1, marginLeft: '10px'}}>
-//                     <ImageUpload label="Department Hero Image" name="heroImage" initialImage={initialData?.heroImage ? `${initialData.heroImage.url}` : undefined} isRequired={!initialData} />
-//                 </div>
-//             </div>
-//             <div style={styles.formGroup}>
-//                 <label style={styles.label}>Mission Points</label>
-//                 {missionPoints.map((point, index) => 
-//                     (<div key={index} style={{display: 'flex', alignItems: 'center', marginBottom: '8px'}}>
-//                         <input value={point} onChange={(e) => { const newPoints = [...missionPoints]; newPoints[index] = e.target.value; setMissionPoints(newPoints); }} style={{...styles.input, flex: 1}} placeholder={`Mission Point ${index + 1}`} />
-//                         <button type="button" onClick={() => removeMissionPoint(index)} style={styles.removeButton} title="Delete Point"><TrashIcon /></button>
-//                     </div>)
-//                 )}
-//                 <button type="button" onClick={addMissionPoint} style={styles.addButton}>Add Mission Point</button>
-//             </div>
-//             <div style={styles.formGroup}>
-//                 <label style={styles.label}>Faculty Members</label>
-//                 {faculty.map((member, index) =>
-//                     (<div key={index} style={{...styles.formRow, marginBottom: '10px', borderBottom: '1px solid var(--border-color)', paddingBottom: '10px'}}>
-//                         <input type="number" value={member.sno} onChange={(e) => handleFacultyChange(index, 'sno', parseInt(e.target.value))} style={{...styles.input, flex: 0.5, marginRight: '10px'}} placeholder="S.No" />
-//                         <input value={member.name} onChange={(e) => handleFacultyChange(index, 'name', e.target.value)} style={{...styles.input, flex: 2, marginRight: '10px'}} placeholder="Faculty Name" />
-//                         <input value={member.designation} onChange={(e) => handleFacultyChange(index, 'designation', e.target.value)} style={{...styles.input, flex: 2}} placeholder="Designation" />
-//                         <button type="button" onClick={() => removeFaculty(index)} style={styles.removeButton} title="Delete Member"><TrashIcon /></button>
-//                     </div>)
-//                 )}
-//                 <button type="button" onClick={addFaculty} style={styles.addButton}>Add Faculty Member</button>
-//             </div>
-//             <div style={styles.formActions}>
-//                 <button type="submit" style={styles.submitButton}>{initialData ? 'Update Department' : 'Add Department'}</button>
-//                 <button type="button" onClick={onCancel} style={styles.cancelButton}>Cancel</button>
-//             </div>
-//         </form>
-//     );
-// };
-
-
-
-
-
-
-// const DepartmentForm = ({ onFormSubmit, initialData, onCancel }: { 
-//     onFormSubmit: (data: FormData) => void; 
-//     initialData?: Department | null; 
-//     onCancel: () => void 
-// }) => {
-//     const [missionPoints, setMissionPoints] = useState<string[]>([]);
-//     const [faculty, setFaculty] = useState<FacultyMember[]>([]);
-
-//     useEffect(() => { 
-//         if (initialData && isDepartment(initialData)) {
-//             setMissionPoints(initialData.mission || ['']); 
-//             setFaculty(initialData.faculty || [{ sno: 1, name: '', designation: '' }]); 
-//         } else {
-//             setMissionPoints(['']); 
-//             setFaculty([{ sno: 1, name: '', designation: '' }]); 
-//         }
-//     }, [initialData]);
-
-//     const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => { 
-//         e.preventDefault(); 
-//         const formData = new FormData(e.currentTarget); 
-//         formData.append('mission', JSON.stringify(missionPoints.filter(m => m))); 
-//         formData.append('faculty', JSON.stringify(faculty.filter(f => f.name && f.designation))); 
-//         onFormSubmit(formData); 
-//     };
-
-//     const handleFacultyChange = (index: number, field: keyof FacultyMember, value: string | number) => { 
-//         setFaculty(faculty.map((f, i) => i === index ? { ...f, [field]: value } : f)); 
-//     };
-
-//     const addFaculty = () => setFaculty([...faculty, { sno: faculty.length + 1, name: '', designation: '' }]);
-//     const removeFaculty = (index: number) => setFaculty(faculty.filter((_, i) => i !== index));
-//     const addMissionPoint = () => setMissionPoints([...missionPoints, '']);
-//     const removeMissionPoint = (index: number) => setMissionPoints(missionPoints.filter((_, i) => i !== index));
-
-//     return (
-//         <form onSubmit={handleSubmit} style={styles.form}>
-//             <div style={styles.formRow}>
-//                 <div style={{...styles.formGroup, flex: 1, marginRight: '10px'}}>
-//                     <label style={styles.label}>Department Code (e.g., 'cse')</label>
-//                     <input name="code" defaultValue={isDepartment(initialData) ? initialData.code : ''} style={styles.input} required disabled={!!initialData} />
-//                 </div>
-//                 <div style={{...styles.formGroup, flex: 1, marginLeft: '10px'}}>
-//                     <label style={styles.label}>Department Name</label>
-//                     <input name="name" defaultValue={isDepartment(initialData) ? initialData.name : ''} style={styles.input} required />
-//                 </div>
-//             </div>
-//             <div style={styles.formGroup}>
-//                 <label style={styles.label}>About Department</label>
-//                 <textarea name="about" defaultValue={isDepartment(initialData) ? initialData.about : ''} style={styles.textarea} required />
-//             </div>
-//             <div style={styles.formRow}>
-//                 <div style={{...styles.formGroup, flex: 1, marginRight: '10px'}}>
-//                     <label style={styles.label}>HOD Name</label>
-//                     <input name="hodName" defaultValue={isDepartment(initialData) ? initialData.hodName : ''} style={styles.input} required />
-//                 </div>
-//                 <div style={{...styles.formGroup, flex: 1, marginLeft: '10px'}}>
-//                     <label style={styles.label}>Vision</label>
-//                     <textarea name="vision" defaultValue={isDepartment(initialData) ? initialData.vision : ''} style={{...styles.textarea, minHeight: '52px'}} required />
-//                 </div>
-//             </div>
-//             <div style={styles.formGroup}>
-//                 <label style={styles.label}>HOD Message</label>
-//                 <textarea name="hodMessage" defaultValue={isDepartment(initialData) ? initialData.hodMessage : ''} style={styles.textarea} required />
-//             </div>
-//             <div style={styles.formRow}>
-//                 <div style={{flex: 1, marginRight: '10px'}}>
-//                     <ImageUpload label="HOD Image" name="hodImage" initialImage={isDepartment(initialData) && initialData.hodImage ? `${API_BASE_URL}/uploads/${initialData.hodImage}`: undefined} isRequired={!initialData} />
-//                 </div>
-//                 <div style={{flex: 1, marginLeft: '10px'}}>
-//                     <ImageUpload label="Department Hero Image" name="heroImage" initialImage={isDepartment(initialData) && initialData.heroImage ? `${API_BASE_URL}/uploads/${initialData.heroImage}` : undefined} isRequired={!initialData} />
-//                 </div>
-//             </div>
-//             <div style={styles.formGroup}>
-//                 <label style={styles.label}>Mission Points</label>
-//                 {missionPoints.map((point, index) => 
-//                     (<div key={index} style={{display: 'flex', alignItems: 'center', marginBottom: '8px'}}>
-//                         <input value={point} onChange={(e) => { const newPoints = [...missionPoints]; newPoints[index] = e.target.value; setMissionPoints(newPoints); }} style={{...styles.input, flex: 1}} placeholder={`Mission Point ${index + 1}`} />
-//                         <button type="button" onClick={() => removeMissionPoint(index)} style={styles.removeButton} title="Delete Point"><TrashIcon /></button>
-//                     </div>)
-//                 )}
-//                 <button type="button" onClick={addMissionPoint} style={styles.addButton}>Add Mission Point</button>
-//             </div>
-//             <div style={styles.formGroup}>
-//                 <label style={styles.label}>Faculty Members</label>
-//                 {faculty.map((member, index) =>
-//                     (<div key={index} style={{...styles.formRow, marginBottom: '10px', borderBottom: '1px solid var(--border-color)', paddingBottom: '10px'}}>
-//                         <input type="number" value={member.sno} onChange={(e) => handleFacultyChange(index, 'sno', parseInt(e.target.value))} style={{...styles.input, flex: 0.5, marginRight: '10px'}} placeholder="S.No" />
-//                         <input value={member.name} onChange={(e) => handleFacultyChange(index, 'name', e.target.value)} style={{...styles.input, flex: 2, marginRight: '10px'}} placeholder="Faculty Name" />
-//                         <input value={member.designation} onChange={(e) => handleFacultyChange(index, 'designation', e.target.value)} style={{...styles.input, flex: 2}} placeholder="Designation" />
-//                         <button type="button" onClick={() => removeFaculty(index)} style={styles.removeButton} title="Delete Member"><TrashIcon /></button>
-//                     </div>)
-//                 )}
-//                 <button type="button" onClick={addFaculty} style={styles.addButton}>Add Faculty Member</button>
-//             </div>
-//             <div style={styles.formActions}>
-//                 <button type="submit" style={styles.submitButton}>{initialData ? 'Update Department' : 'Add Department'}</button>
-//                 <button type="button" onClick={onCancel} style={styles.cancelButton}>Cancel</button>
-//             </div>
-//         </form>
-//     );
-// };
-
 const NewsEventForm = ({ onFormSubmit, initialData, onCancel }: { onFormSubmit: (data: FormData) => void; initialData?: NewsEvent | null; onCancel: () => void }) => {
     return (
          <form onSubmit={(e) => { e.preventDefault(); onFormSubmit(new FormData(e.currentTarget)); }} style={styles.form}>
@@ -576,7 +343,7 @@ const NewsEventForm = ({ onFormSubmit, initialData, onCancel }: { onFormSubmit: 
                 </div>
             </div>
             <div style={styles.formRow}><div style={{...styles.formGroup, flex: 1, marginRight: '10px'}}><label style={styles.label}>Date</label><input name="date" type="date" defaultValue={initialData?.date ? new Date(initialData.date).toISOString().split('T')[0] : ''} style={styles.input} required /></div><div style={{...styles.formGroup, flex: 1, marginLeft: '10px'}}><ColorPicker name="bgColor" initialValue={initialData?.bgColor} /></div></div>
-            <ImageUpload label="Event/News Image" name="image" initialImage={initialData?.image ? `${initialData.image.url}` : undefined} isRequired={!initialData} />
+            <ImageUpload label="Event/News Image" name="image" initialImage={initialData.image}  isRequired={!initialData} />
             <div style={styles.formGroup}><label style={styles.label}>Description</label><textarea name="description" defaultValue={initialData?.description} style={styles.textarea} required /></div>
         <div style={styles.formGroup}>
         <label style={styles.label}>Path (URL)</label>
@@ -619,14 +386,14 @@ const PlacementForm = ({ onFormSubmit, initialData, onCancel }: { onFormSubmit: 
             <ImageUpload
                 label="Student Image"
                 name="image"
-                initialImage={initialData?.image ? `${initialData.image.url}` : undefined}
+                initialImage={initialData?.image ? `${initialData.image}` : undefined}
                 isRequired={!initialData}
             />
 
             <ImageUpload
                 label="Company Logo"
                 name="companyLogo"
-                initialImage={initialData?.companyLogo ? `${initialData.companyLogo.url}` : undefined}
+                initialImage={initialData?.companyLogo ? `${initialData.companyLogo}` : undefined}
                 isRequired={!initialData}
             />
 
@@ -644,16 +411,16 @@ const HeroImageForm = ({ onFormSubmit, initialData , onCancel }: { onFormSubmit:
     return (
         <form onSubmit={(e) => { e.preventDefault(); onFormSubmit(new FormData(e.currentTarget)); }} style={styles.form}>
             <div style={styles.formGroup}>
-                <label style={styles.label}>Title</label>
-                <input name="title" style={styles.input} defaultValue={initialData?.title} placeholder="e.g., Main Campus View" required />
+                <label style={styles.label}>Number</label>
+                <input name="number" style={styles.input} defaultValue={initialData?.number} placeholder="e.g., Main Campus View" required />
             </div>
             <div style={styles.formRow}>
                 <div style={{flex: 1, marginRight: '10px'}}>
-                    <ImageUpload label="Desktop Image" name="desktopImage" initialImage={initialData?.desktopImage ? `${initialData.desktopImage.url}` : undefined} icon={<DesktopIcon />} isRequired={true} />
+                    <ImageUpload label="image" name="image" initialImage={initialData?.image} icon={<DesktopIcon />} isRequired={true} />
                 </div>
-                <div style={{flex: 1, marginLeft: '10px'}}>
+                {/* <div style={{flex: 1, marginLeft: '10px'}}>
                     <ImageUpload label="Mobile Image" name="mobileImage" initialImage={initialData?.mobileImage ? `${initialData.mobileImage.url}` : undefined} icon={<MobileIcon />} isRequired={true} />
-                </div>
+                </div> */}
             </div>
             <div style={styles.formActions}><button type="submit" style={styles.submitButton}>{initialData ? 'Update Hero Image' : 'CreateNew Hero Image'}</button><button type="button" onClick={onCancel} style={styles.cancelButton}>Cancel</button></div>
         </form>
@@ -815,8 +582,8 @@ const AdminDashboard = () => {
         'Departments': { endpoint: 'department', 
             listColumns: [{ header: 'Code', 
                 accessor: (item: Department) => item?.code || 'N/A' }, 
-                { header: 'BackGround IMG', accessor: (item: Department) => item?.heroImage?.url ? <img src={`${item.heroImage.url}`} alt={item.code} style={styles.tableImage} /> : 'No Image' },
-                { header: 'HOD Image', accessor: (item: Department) => item?.hodImage?.url ? <img src={`${item.hodImage.url}`} alt={item.hodName} style={styles.tableImage} /> : 'No Image' },
+                { header: 'BackGround IMG', accessor: (item: Department) => item?.heroImage? <img src={`${item.heroImage}`} alt={item.code} style={styles.tableImage} /> : 'No Image' },
+                { header: 'HOD Image', accessor: (item: Department) => item?.hodImage? <img src={`${item.hodImage}`} alt={item.hodName} style={styles.tableImage} /> : 'No Image' },
                 { header: 'Name', accessor: (item: Department) => item?.name || 'N/A' }, 
                 { header: 'HOD', accessor: (item: Department) => item?.hodName || 'N/A' },
                 // { header: 'Message', accessor: (item: Department) => item.hodMessage},
@@ -828,7 +595,7 @@ const AdminDashboard = () => {
         
         'News & Events': { endpoint: 'newsEvents', 
             listColumns: [ { header: 'Image', 
-                accessor: (item: NewsEvent) => item?.image?.url ? <img src={`${item.image.url}`} alt={item.title} style={styles.tableImage} /> : 'No Image'}, 
+                accessor: (item: NewsEvent) => item?.image ? <img src={`${item.image}`} alt={item.title} style={styles.tableImage} /> : 'No Image'}, 
                 { header: 'Title', accessor: (item: NewsEvent) => item?.title || 'N/A' }, 
                 // { header: 'Type', accessor: (item: NewsEvent) => <span style={item.type === 'Event' ? styles.eventBadge : styles.newsBadge}>{item.type}</span> }, 
                 { header: 'Type', accessor: (item: NewsEvent) => <span style={styles.eventBadge}>{item?.type || 'N/A'}</span> }, 
@@ -837,9 +604,9 @@ const AdminDashboard = () => {
                  ] },
         'Hero Images': { endpoint: 'heroImage', 
             listColumns: [{ 
-                header: 'Desktop', accessor: (item: HeroImage) => item?.desktopImage?.url ? <img src={`${item.desktopImage.url}`} alt={item.title} style={styles.tableImage} /> : 'No Image' }, 
-                { header: 'Mobile', accessor: (item: HeroImage) => item?.mobileImage?.url ? <img src={`${item.mobileImage.url}`} alt={item.title} style={styles.tableImage} /> : 'No Image' }, 
-                { header: 'Title', accessor: (item: HeroImage) => item?.title || 'N/A' 
+                header: 'Image', accessor: (item: HeroImage) => item?.image ? <img src={`${item.image}`} alt={item.number} style={styles.tableImage} /> : 'No Image' }, 
+                // { header: 'Mobile', accessor: (item: HeroImage) => item?.mobileImage?.url ? <img src={`${item.mobileImage.url}`} alt={item.title} style={styles.tableImage} /> : 'No Image' }, 
+                { header: 'Number', accessor: (item: HeroImage) => item?.number || 'N/A' 
                 }] },
         'Announcements': { endpoint: 'announcement', 
             listColumns: [
@@ -854,8 +621,8 @@ const AdminDashboard = () => {
                 { header: 'Student Name', accessor: (item: Placement) => item?.student || 'N/A'}, 
                 { header: 'Company', accessor: (item: Placement) => item?.company || 'N/A'}, 
                 { header: 'Package', accessor: (item: Placement) => item?.package || 'N/A'},
-                { header: 'image', accessor: (item: Placement) => item?.image?.url ? <img src={`${item.image.url}`} alt={item.student} style={styles.tableImage} /> : 'No Image'}, 
-                { header: 'Company Logo', accessor: (item: Placement) => item?.companyLogo?.url ? <img src={`${item.companyLogo.url}`} alt={item.student} style={styles.tableImage} /> : 'No Image'}, 
+                { header: 'image', accessor: (item: Placement) => item?.image ? <img src={`${item.image}`} alt={item.student} style={styles.tableImage} /> : 'No Image'}, 
+                { header: 'Company Logo', accessor: (item: Placement) => item?.companyLogo ? <img src={`${item.companyLogo}`} alt={item.student} style={styles.tableImage} /> : 'No Image'}, 
                  ] },
 
                 }
@@ -869,9 +636,9 @@ const AdminDashboard = () => {
             const response = await fetch(`${API_BASE_URL}/api/${config.endpoint}/${listRoute}`);
             // if (!response.ok) throw new Error(`Failed to fetch ${menu}`);
             const data = await response.json();
-            console.log(data);
+            // console.log(data);
             setItems(Array.isArray(data) ? data : []);
-            console.log("here    ",items);
+            // console.log("here    ",items);
         } catch (err: any) { setError(err.message); setItems([]); } finally { setLoading(false); }
     }, [activeView]);
 
@@ -893,8 +660,8 @@ const AdminDashboard = () => {
              endpoint = isUpdating ? `${API_BASE_URL}/api/${config.endpoint}/update/${_id}` : `${API_BASE_URL}/api/${config.endpoint}/add`; }
         setLoading(true); setError(null);
         try {
-            console.log('Submitting Department Form:', Object.fromEntries(formData.entries()));
-            console.log(endpoint,formData);
+            // console.log('Submitting Department Form:', Object.fromEntries(formData.entries()));
+            // console.log(endpoint,formData);
             const response = await fetch(endpoint, { method, body: formData });
             const result = await response.json();
             if (!response.ok) throw new Error(result.message || result.error || 'An error occurred.');

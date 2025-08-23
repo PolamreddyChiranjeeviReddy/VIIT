@@ -6,7 +6,7 @@ export interface INewsEvent extends Document {
   date: string;
   description: string;
   pathlink: string;
-  image: {url: string; public_id: string};
+  image: Buffer;
   bgColor: string;
 }
 
@@ -17,9 +17,7 @@ const NewsEventSchema = new mongoose.Schema<INewsEvent>(
     date: { type: String, required: true },
     description: { type: String, required: true },
     pathlink: {type: String, required: true},
-    image: { url: { type: String, required: true },
-             public_id: { type: String, required: true } 
-        },
+    image: { type: Buffer, required: true },
     bgColor: { type: String, required: true }
   },
   { timestamps: true }

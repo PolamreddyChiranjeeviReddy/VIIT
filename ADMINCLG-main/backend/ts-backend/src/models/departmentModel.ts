@@ -116,19 +116,19 @@ interface FacultyMember {
   designation: string;
 }
 
-interface ImageData {
-  url: string;
-  public_id: string;
-}
+// interface ImageData {
+//   url: string;
+//   public_id: string;
+
 
 export interface DepartmentDocument extends Document {
   code: string;
   name: string;
-  heroImage: ImageData;
+  heroImage: Buffer;
   about: string;
   hodMessage: string;
   hodName: string;
-  hodImage: ImageData;
+  hodImage: Buffer;
   vision: string;
   mission: string[];
   faculty: FacultyMember[];
@@ -143,17 +143,11 @@ const FacultySchema: Schema = new Schema({
 const DepartmentSchema: Schema = new Schema({
   code: { type: String, required: true, unique: true },
   name: { type: String, required: true },
-  heroImage: {
-    url: { type: String, required: true },
-    public_id: { type: String, required: true },
-  },
+  heroImage: { type: Buffer, required: true },
   about: { type: String, required: true },
   hodMessage: { type: String, required: true },
   hodName: { type: String, required: true },
-  hodImage: {
-    url: { type: String, required: true },
-    public_id: { type: String, required: true },
-  },
+  hodImage: { type: Buffer, required: true },
   vision: { type: String, required: true },
   mission: { type: [String], required: true },
   faculty: { type: [FacultySchema], required: true },

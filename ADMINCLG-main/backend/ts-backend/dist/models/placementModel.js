@@ -8,14 +8,8 @@ const PlacementSchema = new mongoose_1.default.Schema({
     student: { type: String, required: true },
     company: { type: String, required: true },
     package: { type: String, required: true },
-    image: {
-        url: { type: String, required: true },
-        public_id: { type: String, required: true },
-    }, // Uploaded student image
-    companyLogo: {
-        url: { type: String, required: true }, // URL of the uploaded company logo
-        public_id: { type: String, required: true }
-    }, // Uploaded company logo
+    image: { type: Buffer, required: true }, // Uploaded student image
+    companyLogo: { type: Buffer, required: true }, // Uploaded company logo
 }, { timestamps: true });
 const placementModel = mongoose_1.default.models.Placement || mongoose_1.default.model('Placement', PlacementSchema);
 exports.default = placementModel;

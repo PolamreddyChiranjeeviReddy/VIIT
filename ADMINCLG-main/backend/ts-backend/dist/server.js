@@ -73,7 +73,16 @@ app.use((req, res, next) => {
     console.log(`⭐ ${req.method} ${req.url}`);
     next();
 });
-app.use((0, cors_1.default)({ origin: true, credentials: true }));
+// app.use(cors({ origin: true, credentials: true }));
+app.use((0, cors_1.default)({
+    origin: [
+        'http://localhost:5173',
+        'https://vignanwebsite.vercel.app',
+        'https://vignansfrontendadmin.vercel.app',
+        'https://viitadminfrontend.onrender.com',
+    ],
+    credentials: true
+}));
 // app.use(express.json());
 app.use((0, cookie_parser_1.default)());
 // app.use(cors());

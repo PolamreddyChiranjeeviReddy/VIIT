@@ -34,6 +34,7 @@ var __importStar = (this && this.__importStar) || (function () {
     };
 })();
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.HeroImage = void 0;
 // export interface HeroImageDocument extends Document {
 //   title: string;
 //   desktopImage: string;
@@ -50,19 +51,35 @@ Object.defineProperty(exports, "__esModule", { value: true });
 //   mongoose.models.heroImage ||
 //   mongoose.model<HeroImageDocument>('heroImage', HeroImageSchema);
 // export default heroImageModel;
+// import mongoose, { Schema, Document } from 'mongoose';
+// export interface HeroImageDocument extends Document {
+//   title: string;
+//   desktopImage: { url: string; public_id: string };
+//   mobileImage: { url: string; public_id: string };
+// }
+// const HeroImageSchema: Schema = new Schema(
+//   {
+//     title: { type: String, required: true },
+//     desktopImage: {
+//       url: { type: String, required: true },
+//       public_id: { type: String, required: true },
+//     },
+//     mobileImage: {
+//       url: { type: String, required: true },
+//       public_id: { type: String, required: true },
+//     },
+//   },
+//   { timestamps: true }
+// );
+// const heroImageModel =
+//   mongoose.models.heroImage ||
+//   mongoose.model<HeroImageDocument>('heroImage', HeroImageSchema);
+// export default heroImageModel;
 const mongoose_1 = __importStar(require("mongoose"));
-const HeroImageSchema = new mongoose_1.Schema({
-    title: { type: String, required: true },
-    desktopImage: {
-        url: { type: String, required: true },
-        public_id: { type: String, required: true },
-    },
-    mobileImage: {
-        url: { type: String, required: true },
-        public_id: { type: String, required: true },
-    },
-}, { timestamps: true });
-const heroImageModel = mongoose_1.default.models.heroImage ||
-    mongoose_1.default.model('heroImage', HeroImageSchema);
-exports.default = heroImageModel;
+const heroImageSchema = new mongoose_1.Schema({
+    number: { type: Number, required: true },
+    image: { type: Buffer, required: true },
+    contentType: { type: String, required: true },
+});
+exports.HeroImage = mongoose_1.default.models.heroImage || mongoose_1.default.model("HeroImage", heroImageSchema);
 //# sourceMappingURL=heroImageModel.js.map

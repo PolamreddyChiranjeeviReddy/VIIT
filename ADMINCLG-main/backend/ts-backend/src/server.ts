@@ -74,7 +74,7 @@ import mongoose from 'mongoose';
 import cookieParser from "cookie-parser";
 import cors from 'cors';
 import dotenv from 'dotenv';
-import path from 'path';
+// import path from 'path';
 import departmentRoutes from './routes/departmentRoute';
 import userRoute from './routes/userRoute';
 import newsEventsRoute from './routes/newsEventsRoute';
@@ -86,10 +86,10 @@ dotenv.config();
 const app = express();
 
 // Middleware
-app.use((req, res, next) => {
-  console.log(`⭐ ${req.method} ${req.url}`);
-  next();
-});
+// app.use((req, res, next) => {
+//   console.log(`⭐ ${req.method} ${req.url}`);
+//   next();
+// });
 // app.use(cors({ origin: true, credentials: true }));
 app.use(cors({
   origin: [
@@ -104,14 +104,14 @@ app.use(cookieParser());
 // app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+// app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
 // Routes
 app.use('/api/department', departmentRoutes);
 app.use('/api/user',userRoute);
 app.use('/api/newsEvents',newsEventsRoute);
 app.use('/api/heroImage',heroImageRoute);
-app.use("/images",express.static('uploads'));
+// app.use("/images",express.static('uploads'));
 app.use("/api/announcement",announcementRoute);
 app.use("/api/placement",placementRoute);
 // app.use('')
@@ -119,7 +119,7 @@ app.use("/api/placement",placementRoute);
 // MongoDB Connection
 mongoose.connect(process.env.MONGO_URI || '')
   .then(() => {
-    console.log('MongoDB connected');
+    // console.log('MongoDB connected');
     app.listen(5000, () => console.log('Server running on port 5000'));
   })
   .catch(err => console.error('MongoDB connection error:', err));

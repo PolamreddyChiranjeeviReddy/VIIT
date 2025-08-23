@@ -1,15 +1,8 @@
-import mongoose, { Document } from 'mongoose';
-export interface HeroImageDocument extends Document {
-    title: string;
-    desktopImage: {
-        url: string;
-        public_id: string;
-    };
-    mobileImage: {
-        url: string;
-        public_id: string;
-    };
+import mongoose, { Document } from "mongoose";
+export interface HeroImageDoc extends Document {
+    number: number;
+    image: Buffer;
+    contentType: string;
 }
-declare const heroImageModel: mongoose.Model<any, {}, {}, {}, any, any>;
-export default heroImageModel;
+export declare const HeroImage: mongoose.Model<any, {}, {}, {}, any, any>;
 //# sourceMappingURL=heroImageModel.d.ts.map

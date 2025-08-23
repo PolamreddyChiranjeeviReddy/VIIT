@@ -4,18 +4,14 @@ interface FacultyMember {
     name: string;
     designation: string;
 }
-interface ImageData {
-    url: string;
-    public_id: string;
-}
 export interface DepartmentDocument extends Document {
     code: string;
     name: string;
-    heroImage: ImageData;
+    heroImage: Buffer;
     about: string;
     hodMessage: string;
     hodName: string;
-    hodImage: ImageData;
+    hodImage: Buffer;
     vision: string;
     mission: string[];
     faculty: FacultyMember[];
