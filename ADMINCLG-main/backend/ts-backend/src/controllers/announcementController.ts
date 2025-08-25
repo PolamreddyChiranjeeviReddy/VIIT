@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import Announcement from "../models/announcementModel";
 
-// 📌 Create Announcement
+//  Create Announcement
 export const createAnnouncement = async (req: Request, res: Response) => {
   try {
     // console.log("hello");
@@ -24,11 +24,29 @@ export const createAnnouncement = async (req: Request, res: Response) => {
   }
 };
 
-// 📌 Get All Announcements
+// Get All Announcements
 export const getAnnouncements = async (_req: Request, res: Response) => {
   try {
     const announcements = await Announcement.find().sort({ date: -1 });
-    res.status(200).json(announcements);
+    const formatted = announcements.map((announcement) => {
+      let safePathlink = announcement.path;
+
+      // If the pathlink is a full external URL, wrap it in our safe redirect link
+      if (announcement.path && (announcement.path.startsWith('https://'))) {
+        // We MUST encode the URL so it can be passed as a parameter safely
+        safePathlink = `/redirect?url=${encodeURIComponent(announcement.path)}`;
+      }
+
+      return {
+        _id: announcement._id,
+        title: announcement.title,
+        date: announcement.date,
+        description: announcement.description,
+        path: safePathlink, // Send the NEW, SAFE pathlink to the frontend
+      };
+    });
+    res.status(200).json(formatted);
+    // res.status(200).json(announcements);
   } catch (error) {
     res.status(500).json({ success: false, message: "Server Error", error });
   }
@@ -36,7 +54,7 @@ export const getAnnouncements = async (_req: Request, res: Response) => {
 
 
 
-// 📌 Update Announcement
+//  Update Announcement
 export const updateAnnouncement = async (req: Request, res: Response) => {
   try {
     const { date, title, path, description } = req.body;
@@ -58,7 +76,7 @@ export const updateAnnouncement = async (req: Request, res: Response) => {
   }
 };
 
-// 📌 Delete Announcement
+//  Delete Announcement
 export const deleteAnnouncement = async (req: Request, res: Response) => {
   try {
     const deleted = await Announcement.findByIdAndDelete(req.params._id);

@@ -5,6 +5,7 @@ import type { CSSProperties } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useContext } from 'react';
 import { StoreContext } from '../context/StoreContext';
+import { TbRun } from 'react-icons/tb';
 // import AdminLogin from './AdminLogin';
 // const isDepartment = (item: any): item is Department => {
 //     return 'code' in item && 'mission' in item && 'faculty' in item;
@@ -73,7 +74,7 @@ interface FacultyMember { sno: number; name: string; designation: string; }
 // interface DesktopImage { url: string; public_id: string; }
 // interface HodImage { url: string; public_id: string; }
 // interface HerImage { url: string; public_id: string; }
-interface ImageFile { url: string; public_id: string; }
+// interface ImageFile { url: string; public_id: string; }
 interface Department { _id: string; code: string; name: string; about: string; hodMessage: string; hodName: string; hodImage: Buffer; heroImage: Buffer; vision: string; mission: string[]; faculty: FacultyMember[]; }
 interface NewsEvent { _id: string; type: string; title: string; date: string; description: string; pathlink: string; image: Buffer; bgColor: string; }
 interface HeroImage { number: string; image: Buffer }
@@ -500,7 +501,8 @@ const ItemsList = ({ items, onEditItem, onDeleteItem, columns }: { items: any[],
                 <tbody>
                     {items.length > 0 ? items.map(item => (
                         <tr key={item._id} className="table-row">{columns.map((c, i) => 
-                            <td key={i} style={styles.td}>{c.accessor(item)}</td>)}<td style={styles.td}>
+                            <td key={i} style={c.truncate ? styles.tdTruncated : styles.td}>{c.accessor(item)}
+                                </td>)}<td style={styles.td}>
                                 <div style={styles.actionButtonContainer}>
                                     <button onClick={() => onEditItem(item)} style={{...styles.actionButton, color: 'var(--primary-color)'}} title="Edit"><EditIcon /></button>
                                     <button onClick={() => onDeleteItem(item._id, item.code)} style={{...styles.actionButton, color: 'var(--danger-color)'}} title="Delete"><CrossIcon /></button>
@@ -582,10 +584,10 @@ const AdminDashboard = () => {
         'Departments': { endpoint: 'department', 
             listColumns: [{ header: 'Code', 
                 accessor: (item: Department) => item?.code || 'N/A' }, 
-                { header: 'BackGround IMG', accessor: (item: Department) => item?.heroImage? <img src={`${item.heroImage}`} alt={item.code} style={styles.tableImage} /> : 'No Image' },
-                { header: 'HOD Image', accessor: (item: Department) => item?.hodImage? <img src={`${item.hodImage}`} alt={item.hodName} style={styles.tableImage} /> : 'No Image' },
-                { header: 'Name', accessor: (item: Department) => item?.name || 'N/A' }, 
-                { header: 'HOD', accessor: (item: Department) => item?.hodName || 'N/A' },
+                { header: 'BackGround IMG', accessor: (item: Department) => item?.heroImage? <img src={`${item.heroImage}`} alt={item.code} style={styles.tableImage} /> : 'No Image', truncate: false },
+                { header: 'HOD Image', accessor: (item: Department) => item?.hodImage? <img src={`${item.hodImage}`} alt={item.hodName} style={styles.tableImage} /> : 'No Image', truncate: false },
+                { header: 'Name', accessor: (item: Department) => item?.name || 'N/A', truncate: false }, 
+                { header: 'HOD', accessor: (item: Department) => item?.hodName || 'N/A', truncate: false },
                 // { header: 'Message', accessor: (item: Department) => item.hodMessage},
                 // { header: 'About', accessor: (item: Department) => item.about},
                 // { header: 'Vision', accessor: (item: Department) => item.vision},
@@ -595,34 +597,34 @@ const AdminDashboard = () => {
         
         'News & Events': { endpoint: 'newsEvents', 
             listColumns: [ { header: 'Image', 
-                accessor: (item: NewsEvent) => item?.image ? <img src={`${item.image}`} alt={item.title} style={styles.tableImage} /> : 'No Image'}, 
-                { header: 'Title', accessor: (item: NewsEvent) => item?.title || 'N/A' }, 
+                accessor: (item: NewsEvent) => item?.image ? <img src={`${item.image}`} alt={item.title} style={styles.tableImage} /> : 'No Image', truncate: false}, 
+                { header: 'Title', accessor: (item: NewsEvent) => item?.title || 'N/A', truncate: false }, 
                 // { header: 'Type', accessor: (item: NewsEvent) => <span style={item.type === 'Event' ? styles.eventBadge : styles.newsBadge}>{item.type}</span> }, 
-                { header: 'Type', accessor: (item: NewsEvent) => <span style={styles.eventBadge}>{item?.type || 'N/A'}</span> }, 
-                { header: 'BG Color', accessor: (item: NewsEvent) => item?.bgColor ? <div style={{...styles.colorSwatch, backgroundColor: item.bgColor}}></div> : 'N/A' }, 
-                { header: 'Date', accessor: (item: NewsEvent) => item?.date ? new Date(item.date).toLocaleDateString() : 'N/A' }
+                { header: 'Type', accessor: (item: NewsEvent) => <span style={styles.eventBadge}>{item?.type || 'N/A'}</span> , truncate: false }, 
+                { header: 'BG Color', accessor: (item: NewsEvent) => item?.bgColor ? <div style={{...styles.colorSwatch, backgroundColor: item.bgColor}}></div> : 'N/A' , truncate: false}, 
+                { header: 'Date', accessor: (item: NewsEvent) => item?.date ? new Date(item.date).toLocaleDateString() : 'N/A', truncate: false}
                  ] },
         'Hero Images': { endpoint: 'heroImage', 
             listColumns: [{ 
-                header: 'Image', accessor: (item: HeroImage) => item?.image ? <img src={`${item.image}`} alt={item.number} style={styles.tableImage} /> : 'No Image' }, 
+                header: 'Image', accessor: (item: HeroImage) => item?.image ? <img src={`${item.image}`} alt={item.number} style={styles.tableImage} /> : 'No Image', truncate: false }, 
                 // { header: 'Mobile', accessor: (item: HeroImage) => item?.mobileImage?.url ? <img src={`${item.mobileImage.url}`} alt={item.title} style={styles.tableImage} /> : 'No Image' }, 
-                { header: 'Number', accessor: (item: HeroImage) => item?.number || 'N/A' 
+                { header: 'Number', accessor: (item: HeroImage) => item?.number || 'N/A', truncate: false 
                 }] },
         'Announcements': { endpoint: 'announcement', 
             listColumns: [
-                { header: 'Date', accessor: (item: Announcement) => item?.date ? new Date(item.date).toLocaleDateString() : 'N/A'}, 
-                { header: 'Title', accessor: (item: Announcement) => item?.title || 'N/A' },
-                { header: 'Path', accessor: (item: Announcement) => item?.path || 'N/A' },
-                { header: 'Description', accessor: (item: Announcement) => item?.description || 'N/A' },
+                { header: 'Date', accessor: (item: Announcement) => item?.date ? new Date(item.date).toLocaleDateString() : 'N/A', truncate: false}, 
+                { header: 'Title', accessor: (item: Announcement) => item?.title || 'N/A', truncate: false },
+                { header: 'Path', accessor: (item: Announcement) => item?.path || 'N/A', truncate: false },
+                { header: 'Description', accessor: (item: Announcement) => item?.description || 'N/A', truncate: true},
                 ] },
 
         'Placements': { endpoint: 'placement', 
             listColumns: [ 
-                { header: 'Student Name', accessor: (item: Placement) => item?.student || 'N/A'}, 
-                { header: 'Company', accessor: (item: Placement) => item?.company || 'N/A'}, 
-                { header: 'Package', accessor: (item: Placement) => item?.package || 'N/A'},
-                { header: 'image', accessor: (item: Placement) => item?.image ? <img src={`${item.image}`} alt={item.student} style={styles.tableImage} /> : 'No Image'}, 
-                { header: 'Company Logo', accessor: (item: Placement) => item?.companyLogo ? <img src={`${item.companyLogo}`} alt={item.student} style={styles.tableImage} /> : 'No Image'}, 
+                { header: 'Student Name', accessor: (item: Placement) => item?.student || 'N/A', truncate: false}, 
+                { header: 'Company', accessor: (item: Placement) => item?.company || 'N/A', truncate: false}, 
+                { header: 'Package', accessor: (item: Placement) => item?.package || 'N/A', truncate: false},
+                { header: 'image', accessor: (item: Placement) => item?.image ? <img src={`${item.image}`} alt={item.student} style={styles.tableImage} /> : 'No Image', truncate: false}, 
+                { header: 'Company Logo', accessor: (item: Placement) => item?.companyLogo ? <img src={`${item.companyLogo}`} alt={item.student} style={styles.tableImage} /> : 'No Image', truncate: false}, 
                  ] },
 
                 }
@@ -866,7 +868,23 @@ const styles: { [key: string]: CSSProperties } = {
   table: { width: '100%', borderCollapse: 'collapse', minWidth: '600px' },
 //   table: { width: '100%', borderCollapse: 'collapse', minWidth: '1100px' },
   th: { padding: '15px', textAlign: 'left', borderBottom: '2px solid var(--border-color)', fontWeight: 600, color: 'var(--text-secondary)', backgroundColor: 'var(--background-light)' },
-  td: { padding: '15px', textAlign: 'left', borderBottom: '1px solid var(--border-color)', verticalAlign: 'middle', color: 'var(--text-primary)' },
+  td: { padding: '15px', textAlign: 'left', borderBottom: '1px solid var(--border-color)', overflow:'hidden', textOverflow:'ellipsis',verticalAlign: 'middle', color: 'var(--text-primary)', maxWidth: '100px' },
+  tdTruncated: {
+    // First, include all the properties of your original 'td' style
+    padding: '15px',
+    textAlign: 'left',
+    // borderBottom: '1px solid var(--border-color)',
+    verticalAlign: 'middle',
+    color: 'var(--text-primary)',
+
+    // Now, add the special properties for truncation
+    maxWidth: '200px', // CRITICAL: Set a max-width. Adjust this value as needed.
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+    display: '-webkit-box',
+    WebkitLineClamp: 2, // This sets the number of lines to 2
+    WebkitBoxOrient: 'vertical',
+  },
   tableImage: { width: '80px', height: '60px', objectFit: 'cover', borderRadius: '6px' },
   actionButtonContainer: { display: 'flex', alignItems: 'center' },
   actionButton: { background: 'none', border: 'none', cursor: 'pointer', padding: '5px', marginLeft: '5px' },

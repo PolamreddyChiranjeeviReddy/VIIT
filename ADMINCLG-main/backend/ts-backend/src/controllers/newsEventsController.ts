@@ -27,19 +27,50 @@ export const createEvent = async (req: Request, res: Response) => {
   }
 };
 
+// export const getAllEvents = async (_req: Request, res: Response) => {
+//   try {
+//     const events = await NewsEvent.find().sort({ createdAt: -1 });
+//     const formatted = events.map((img) => ({
+//       _id: img._id,
+//       type: img.type,
+//       image: `data:${img.contentType};base64,${img.image.toString("base64")}`,
+//       title: img.title,
+//       date: img.date,
+//       description: img.description,
+//       pathlink: img.pathlink,
+//       bgColor: img.bgColor,
+//     }));
+//     res.status(200).json(formatted);
+//   } catch (err) {
+//     res.status(500).json({ error: err });
+//   }
+// };
+
+
 export const getAllEvents = async (_req: Request, res: Response) => {
   try {
     const events = await NewsEvent.find().sort({ createdAt: -1 });
-    const formatted = events.map((img) => ({
-      _id: img._id,
-      type: img.type,
-      image: `data:${img.contentType};base64,${img.image.toString("base64")}`,
-      title: img.title,
-      date: img.date,
-      description: img.description,
-      pathlink: img.pathlink,
-      bgColor: img.bgColor,
-    }));
+    const formatted = events.map((event) => {
+      let safePathlink = event.pathlink;
+
+      // If the pathlink is a full external URL, wrap it in our safe redirect link
+      if (event.pathlink && (event.pathlink.startsWith('https://'))) {
+        // We MUST encode the URL so it can be passed as a parameter safely
+        safePathlink = `/redirect?url=${encodeURIComponent(event.pathlink)}`;
+      }
+
+      return {
+        _id: event._id,
+        type: event.type,
+        // Assuming your imageUrl logic is fixed as per our last discussion
+        image: `data:${event.contentType};base64,${event.image.toString("base64")}`, 
+        title: event.title,
+        date: event.date,
+        description: event.description,
+        pathlink: safePathlink, // Send the NEW, SAFE pathlink to the frontend
+        bgColor: event.bgColor,
+      };
+    });
     res.status(200).json(formatted);
   } catch (err) {
     res.status(500).json({ error: err });
