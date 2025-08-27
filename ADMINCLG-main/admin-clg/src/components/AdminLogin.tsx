@@ -398,7 +398,7 @@ const AdminLogin = () => {
      return <div>Loading...</div>;
    }
 
-   const { setToken, url, token, render, setRender, setLoginEmail } = context;
+   const { setToken, url, token, render, setRender, setLoginEmail,loginEmail } = context;
 
     const [data, setData] = useState({
         email: "",
@@ -424,6 +424,7 @@ const AdminLogin = () => {
       setLoginEmail(data.email); // Store email in context
       setToken(response.data.token);
       localStorage.setItem("token", response.data.token);
+      localStorage.setItem("loginEmail", data.email); // Persist email in localStorage
       setRender(true);
       // { render ? navigate('/admin/dashboard') : null };
       // console.log(render);

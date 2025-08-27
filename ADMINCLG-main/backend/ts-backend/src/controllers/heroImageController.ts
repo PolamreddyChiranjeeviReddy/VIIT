@@ -404,7 +404,7 @@ export const updateHeroImage = async (req: Request, res: Response): Promise<void
 // Delete
 export const deleteHeroImage = async (req: Request, res: Response): Promise<void> => {
   try {
-    const deleted = await HeroImage.findByIdAndDelete(req.params.id);
+    const deleted = await HeroImage.findByIdAndDelete(req.params._id);
 
     if (!deleted) {
       res.status(404).json({ message: "Hero image not found" });

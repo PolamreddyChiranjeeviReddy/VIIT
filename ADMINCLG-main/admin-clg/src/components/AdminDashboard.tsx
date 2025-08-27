@@ -530,7 +530,7 @@ const AdminDashboard = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
-    const { loginEmail,setLoginEmail,setRender,setToken } = useContext(StoreContext);
+    const { loginEmail,setLoginEmail,setRender,setToken,logoutUser } = useContext(StoreContext);
     const navigate = useNavigate();
     // const menuConfig = {
     //     'Departments': { endpoint: 'department', 
@@ -727,18 +727,18 @@ const AdminDashboard = () => {
     };
     
     const menuItems = { 'Departments': ['Add/Edit', 'List'], 'News & Events': ['Add/Edit', 'List'], 'Hero Images': ['Add/Edit', 'List'], 'Announcements':['Add/Edit', 'List'], 'Placements':['Add/Edit', 'List'], };
-    const logout = () => {
-    localStorage.removeItem("token");
-    setToken("");
-    setLoginEmail("");
-    setRender(false);
-    navigate('/');
-    }
+    // const logout = () => {
+    // localStorage.removeItem("token");
+    // setToken("");
+    // setLoginEmail("");
+    // setRender(false);
+    // navigate('/');
+    // }
     return (
         <>
         {/* // ReactDOM.createPortal(
         //     <div className="fixed inset-0 bg-white z-50 overflow-y-auto"> */}
-            <div style={styles.dashboardContainer}>
+            <div style={styles.dashboardContainer} onClick={() => { if (profileOpen) setProfileOpen(false); }}>
                 <header style={styles.header}>
                     <div style={styles.headerLeft}>
                         <button className="hamburger-menu" style={styles.hamburgerMenu} onClick={() => setSidebarOpen(!sidebarOpen)}><MenuIcon/></button>
@@ -750,7 +750,7 @@ const AdminDashboard = () => {
                             <UserProfileIcon />
                             {profileOpen && (<div style={styles.profileDropdown}>
                                 <div style={styles.dropdownItem}>{loginEmail}</div>
-                            <div onClick={logout} style={{...styles.dropdownItem, ...styles.logoutButton}}>Logout</div></div>)}
+                            <div onClick={logoutUser} style={{...styles.dropdownItem, ...styles.logoutButton}}>Logout</div></div>)}
                         </div>
                     </div>
                 </header>
@@ -839,8 +839,8 @@ const styles: { [key: string]: CSSProperties } = {
   headerRight: { flex: 1, display: 'flex', justifyContent: 'flex-end' },
   dashboardBody: { display: 'flex', flex: 1, overflow: 'hidden', position: 'relative' },
   mainContent: { flex: 1, padding: '32px', overflowY: 'auto', backgroundColor: 'var(--background-light)' },
-  profileDropdown: { position: 'absolute', top: '55px', right: 0, backgroundColor: 'var(--surface-color)', borderRadius: '8px', boxShadow: '0 8px 16px -4px rgba(9, 30, 66, 0.25), 0 0 1px rgba(9, 30, 66, 0.31)', border: '1px solid var(--border-color)', width: 'auto', overflow: 'hidden', zIndex: 1002, color: 'var(--text-primary)' },
-  dropdownItem: { padding: '12px 20px', borderBottom: '1px solid var(--border-color)', fontSize: '0.95rem', cursor: 'pointer', transition: 'background-color 0.2s, color 0.2s'   },
+  profileDropdown: { position: 'absolute', top: '55px', right: 0, backgroundColor: 'var(--surface-color)', borderRadius: '8px', boxShadow: '0 8px 16px -4px rgba(9, 30, 66, 0.25), 0 0 1px rgba(9, 30, 66, 0.31)', border: '1px solid var(--border-color)', width: 'auto', overflow: 'hidden', zIndex: 1002, color: 'var(--text-primary)', maxWidth: '250px' },
+  dropdownItem: { padding: '12px 20px', borderBottom: '1px solid var(--border-color)', fontSize: '0.95rem', cursor: 'pointer', transition: 'background-color 0.2s, color 0.2s', overflowWrap: 'break-word'  },
   logoutButton: { color: 'var(--danger-color)', fontWeight: 500, borderBottom: 'none' },
   menuItem: { listStyle: 'none', marginBottom: '5px' },
   menuTitle: { fontSize: '1.05rem', fontWeight: 600, padding: '12px 10px', cursor: 'pointer', borderRadius: '6px', color: '#ffffff', display: 'flex', justifyContent: 'space-between', alignItems: 'center' },
