@@ -93,6 +93,7 @@ const app = express();
 // app.use(cors({ origin: true, credentials: true }));
 app.use(cors({
   origin: [
+    'https://viit-portal.onrender.com',
     'https://vignanwebsite.vercel.app',
     'https://vignansfrontendadmin.vercel.app',
     'https://viitadminfrontend.onrender.com',
