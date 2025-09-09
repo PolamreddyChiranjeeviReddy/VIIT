@@ -5,7 +5,11 @@ export interface INewsEvent extends Document {
     date: string;
     description: string;
     pathlink: string;
-    image: Buffer;
+    image: {
+        url: string;
+        key: string;
+        contentType: string;
+    };
     bgColor: string;
 }
 declare const newEventsModel: mongoose.Model<any, {}, {}, {}, any, any>;

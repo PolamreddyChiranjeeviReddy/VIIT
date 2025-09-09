@@ -67,7 +67,7 @@ const registerUser = async (req, res) => {
         res.status(201).json({ success: true, token });
     }
     catch (error) {
-        console.error(error);
+        // console.error(error);
         res.status(500).json({ success: false, message: "Server error" });
     }
 };
@@ -88,7 +88,7 @@ const loginUser = async (req, res) => {
         res.status(200).json({ success: true, token });
     }
     catch (error) {
-        console.error(error);
+        // console.error(error);
         res.status(500).json({ success: false, message: "Server error" });
     }
 };
@@ -113,13 +113,13 @@ exports.seedAdmin = seedAdmin;
 const sendOtp = async (req, res) => {
     try {
         const { email } = req.body || {};
-        console.log(email);
+        // console.log(email);
         if (!email)
             return res.status(400).json({ message: "Email is required" });
         // Make sure user exists (optional: allow for sign-up flow too)
-        console.log("hello");
+        // console.log("hello");
         const user = await userModel_1.default.findOne({ email });
-        console.log(user);
+        // console.log(user);
         if (!user)
             return res.status(404).json({ message: "User not found" });
         // Generate & hash OTP
@@ -134,14 +134,14 @@ const sendOtp = async (req, res) => {
             expiresAt: new Date(Date.now() + 5 * 60 * 1000), // 5 minutes
         });
         // Send email
-        console.log("otp created");
-        console.log(email, otp);
+        // console.log("otp created")
+        // console.log(email, otp);
         await sendOtpEmail(email, otp);
-        console.log("otp send");
+        // console.log("otp send");
         res.json({ message: "OTP sent" });
     }
     catch (e) {
-        console.error(e);
+        // console.error(e);
         res.status(500).json({ message: "Failed to send OTP" });
     }
 };

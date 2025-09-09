@@ -6,19 +6,28 @@ export interface INewsEvent extends Document {
   date: string;
   description: string;
   pathlink: string;
-  image: Buffer;
+  // image: Buffer;
+  image:{
+    url: string;
+    key: string;
+    contentType: string;
+  }
   bgColor: string;
 }
 
 const NewsEventSchema = new mongoose.Schema<INewsEvent>(
   {
-    type: { type: String, required: true },
-    title: { type: String, required: true },
-    date: { type: String, required: true },
-    description: { type: String, required: true },
-    pathlink: {type: String, required: true},
-    image: { type: Buffer, required: true },
-    bgColor: { type: String, required: true }
+    type: { type: String, required: false },
+    title: { type: String, required: false },
+    date: { type: String, required: false },
+    description: { type: String, required: false },
+    pathlink: {type: String, required: false},
+    image: {
+      url: { type: String, required: false },
+      key: { type: String, required: false },
+      contentType: { type: String, required: false }
+    },
+    bgColor: { type: String, required: false }
   },
   { timestamps: true }
 );

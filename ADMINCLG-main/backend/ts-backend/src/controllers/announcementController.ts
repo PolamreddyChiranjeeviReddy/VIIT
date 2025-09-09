@@ -27,7 +27,7 @@ export const createAnnouncement = async (req: Request, res: Response) => {
 // Get All Announcements
 export const getAnnouncements = async (_req: Request, res: Response) => {
   try {
-    const announcements = await Announcement.find().sort({ date: -1 });
+    const announcements = await Announcement.find().sort({ date: 1 });
     const formatted = announcements.map((announcement) => {
       let safePathlink = announcement.path;
 

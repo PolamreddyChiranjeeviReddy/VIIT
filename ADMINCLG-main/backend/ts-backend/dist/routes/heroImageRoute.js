@@ -110,11 +110,40 @@ Object.defineProperty(exports, "__esModule", { value: true });
 //   updateHeroImage
 // );
 // export default router;
+// import express from "express";
+// import multer from "multer";
+// import { createHeroImage, getHeroImages, updateHeroImage, deleteHeroImage } from "../controllers/heroImageController";
+// const router = express.Router();
+// const upload = multer(); // stores files in memory (buffer)
+// router.post("/add", upload.single("image"), createHeroImage);
+// router.get("/list", getHeroImages);
+// router.put("/update/:_id", upload.single("image"), updateHeroImage);
+// router.delete("/delete/:_id", deleteHeroImage);
+// export default router;
+// import express from "express";
+// import multer from "multer";
+// import {
+//   createHeroImage,
+//   getHeroImages,
+//   updateHeroImage,
+//   deleteHeroImage,
+// } from "../controllers/heroImageController";
+// const router = express.Router();
+// // Multer setup → memory storage for Spaces upload
+// const upload = multer({ storage: multer.memoryStorage() });
+// // Routes
+// router.post("/add", upload.single("image"), createHeroImage);
+// router.get("/list", getHeroImages);
+// router.put("/update/:_id", upload.single("image"), updateHeroImage);
+// router.delete("/delete/:_id", deleteHeroImage);
+// export default router;
 const express_1 = __importDefault(require("express"));
 const multer_1 = __importDefault(require("multer"));
 const heroImageController_1 = require("../controllers/heroImageController");
 const router = express_1.default.Router();
-const upload = (0, multer_1.default)(); // stores files in memory (buffer)
+// Multer → store in memory
+const upload = (0, multer_1.default)({ storage: multer_1.default.memoryStorage() });
+// Routes
 router.post("/add", upload.single("image"), heroImageController_1.createHeroImage);
 router.get("/list", heroImageController_1.getHeroImages);
 router.put("/update/:_id", upload.single("image"), heroImageController_1.updateHeroImage);

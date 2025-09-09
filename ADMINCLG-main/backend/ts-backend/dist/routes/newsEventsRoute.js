@@ -9,7 +9,7 @@ const multer_1 = __importDefault(require("multer"));
 // import fs from 'fs';
 const newsEventsController_1 = require("../controllers/newsEventsController");
 // Update multer configuration
-const upload = (0, multer_1.default)();
+// const upload = express.Router();
 // const storage = multer.diskStorage({
 //   destination: function (req, file, cb) {
 //     cb(null, path.join(__dirname, '../uploads'));
@@ -21,6 +21,7 @@ const upload = (0, multer_1.default)();
 // });
 // const upload = multer({ storage : storage });
 const router = express_1.default.Router();
+const upload = (0, multer_1.default)({ storage: multer_1.default.memoryStorage() });
 router.post('/add', upload.single("image"), newsEventsController_1.createEvent);
 router.get('/list', newsEventsController_1.getAllEvents);
 router.put('/update/:_id', upload.single("image"), newsEventsController_1.updateEvent);

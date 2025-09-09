@@ -309,10 +309,278 @@
 
 
 
+// import { Request, Response } from "express";
+// import { HeroImage } from "../models/heroImageModel";
+
+// // Upload (Create)
+// export const createHeroImage = async (req: Request, res: Response): Promise<void> => {
+//   try {
+//     if (!req.file) {
+//       res.status(400).json({ message: "No image uploaded" });
+//       return;
+//     }
+
+//     const newImage = new HeroImage({
+//       number: req.body.number,
+//       image: req.file.buffer,
+//       contentType: req.file.mimetype,
+//     });
+
+//     await newImage.save();
+//     res.status(201).json({ message: "Hero image uploaded successfully", image: newImage });
+//   } catch (error) {
+//     res.status(500).json({ message: "Error uploading image", error });
+//   }
+// };
+
+// // Get all
+// // export const getHeroImages = async (_req: Request, res: Response): Promise<void> => {
+// //   try {
+// //     const images = await HeroImage.find().sort({ number: 1 });
+// //     res.json(images);
+// //   } catch (error) {
+// //     res.status(500).json({ message: "Error fetching images", error });
+// //   }
+// // };
+
+// export const getHeroImages = async (req: Request, res: Response): Promise<void> => {
+//   try {
+//     const images = await HeroImage.find().sort({ number: 1 });
+
+//     const formatted = images.map((img) => ({
+//       _id: img._id,
+//       number: img.number,
+//       image: `data:${img.contentType};base64,${img.image.toString("base64")}`
+//     }));
+
+//     res.json(formatted);
+//   } catch (error: any) {
+//     res.status(500).json({ message: "Failed to fetch images", error: error.message });
+//   }
+// };
+
+// // const department = new departmentModel({
+// //       code,
+// //       name,
+// //       heroImage: {
+// //         url: heroImage.path,
+// //         public_id: heroImage.filename,
+// //       },
+// //       about,
+// //       hodMessage,
+// //       hodName,
+// //       hodImage: {
+// //         url: hodImage.path,
+// //         public_id: hodImage.filename,
+// //       },
+// //       vision,
+// //       mission: parsedMission,
+// //       faculty: parsedFaculty
+// //     });
+
+// // Update
+// export const updateHeroImage = async (req: Request, res: Response): Promise<void> => {
+//   try {
+//     const updateData: any = {};
+//     if (req.body.number) updateData.number = req.body.number;
+//     if (req.file) {
+//       updateData.image = req.file.buffer;
+//       updateData.contentType = req.file.mimetype;
+//     }
+
+//     const updated = await HeroImage.findByIdAndUpdate(req.params._id, updateData, { new: true });
+
+//     if (!updated) {
+//       res.status(404).json({ message: "Hero image not found" });
+//       return;
+//     }
+
+//     res.json({ message: "Hero image updated successfully", image: updated });
+//   } catch (error) {
+//     res.status(500).json({ message: "Error updating image", error });
+//   }
+// };
+
+// // Delete
+// export const deleteHeroImage = async (req: Request, res: Response): Promise<void> => {
+//   try {
+//     const deleted = await HeroImage.findByIdAndDelete(req.params._id);
+
+//     if (!deleted) {
+//       res.status(404).json({ message: "Hero image not found" });
+//       return;
+//     }
+
+//     res.json({ message: "Hero image deleted successfully" });
+//   } catch (error) {
+//     res.status(500).json({ message: "Error deleting image", error });
+//   }
+// };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+// import { Request, Response } from "express";
+// import { HeroImage } from "../models/heroImageModel";
+// import { s3 } from "../config/spaces";
+// import { v4 as uuidv4 } from "uuid";
+
+// // Create / Upload
+// export const createHeroImage = async (req: Request, res: Response): Promise<void> => {
+//   try {
+//     if (!req.file) {
+//       res.status(400).json({ message: "No image uploaded" });
+//       return;
+//     }
+
+//     const key = `hero/${uuidv4()}-${req.file.originalname.replace(/\s+/g, "_")}`;
+
+//     await s3
+//       .putObject({
+//         Bucket: process.env.SPACES_BUCKET || "",
+//         Key: key,
+//         Body: req.file.buffer,
+//         ACL: "public-read",
+//         ContentType: req.file.mimetype,
+//       })
+//       .promise();
+
+//     const url = `${process.env.SPACES_ENDPOINT}/${process.env.SPACES_BUCKET}/${key}`;
+
+//     const newImage = new HeroImage({
+//       number: req.body.number,
+//       url,
+//       key,
+//       contentType: req.file.mimetype,
+//     });
+
+//     await newImage.save();
+
+//     res.status(201).json({ message: "Hero image uploaded successfully", image: newImage });
+//   } catch (error: any) {
+//     res.status(500).json({ message: "Error uploading image", error: error.message });
+//   }
+// };
+
+// // Get All
+// export const getHeroImages = async (_req: Request, res: Response): Promise<void> => {
+//   try {
+//     const images = await HeroImage.find().sort({ number: 1 });
+//     res.json(images);
+//   } catch (error: any) {
+//     res.status(500).json({ message: "Failed to fetch images", error: error.message });
+//   }
+// };
+
+// // Update
+// export const updateHeroImage = async (req: Request, res: Response): Promise<void> => {
+//   try {
+//     const existing = await HeroImage.findById(req.params._id);
+//     if (!existing) {
+//       res.status(404).json({ message: "Hero image not found" });
+//       return;
+//     }
+
+//     let updateData: any = { number: req.body.number || existing.number };
+
+//     if (req.file) {
+//       // Delete old from Spaces
+//       await s3
+//         .deleteObject({
+//           Bucket: process.env.SPACES_BUCKET || "",
+//           Key: existing.key,
+//         })
+//         .promise();
+
+//       // Upload new
+//       const key = `hero/${uuidv4()}-${req.file.originalname.replace(/\s+/g, "_")}`;
+
+//       await s3
+//         .putObject({
+//           Bucket: process.env.SPACES_BUCKET || "",
+//           Key: key,
+//           Body: req.file.buffer,
+//           ACL: "public-read",
+//           ContentType: req.file.mimetype,
+//         })
+//         .promise();
+
+//       updateData.url = `${process.env.SPACES_ENDPOINT}/${process.env.SPACES_BUCKET}/${key}`;
+//       updateData.key = key;
+//       updateData.contentType = req.file.mimetype;
+//     }
+
+//     const updated = await HeroImage.findByIdAndUpdate(req.params._id, updateData, { new: true });
+
+//     res.json({ message: "Hero image updated successfully", image: updated });
+//   } catch (error: any) {
+//     res.status(500).json({ message: "Error updating image", error: error.message });
+//   }
+// };
+
+// // Delete
+// export const deleteHeroImage = async (req: Request, res: Response): Promise<void> => {
+//   try {
+//     const existing = await HeroImage.findById(req.params._id);
+//     if (!existing) {
+//       res.status(404).json({ message: "Hero image not found" });
+//       return;
+//     }
+
+//     // Delete from Spaces
+//     await s3
+//       .deleteObject({
+//         Bucket: process.env.SPACES_BUCKET || "",
+//         Key: existing.key,
+//       })
+//       .promise();
+
+//     // Delete from DB
+//     await HeroImage.findByIdAndDelete(req.params._id);
+
+//     res.json({ message: "Hero image deleted successfully" });
+//   } catch (error: any) {
+//     res.status(500).json({ message: "Error deleting image", error: error.message });
+//   }
+// };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 import { Request, Response } from "express";
 import { HeroImage } from "../models/heroImageModel";
+import { s3 } from "../config/spaces";
+import { v4 as uuidv4 } from "uuid";
+import {
+  PutObjectCommand,
+  DeleteObjectCommand,
+} from "@aws-sdk/client-s3";
 
-// Upload (Create)
+// Create / Upload
 export const createHeroImage = async (req: Request, res: Response): Promise<void> => {
   try {
     if (!req.file) {
@@ -320,99 +588,115 @@ export const createHeroImage = async (req: Request, res: Response): Promise<void
       return;
     }
 
+    const key = `hero/${uuidv4()}-${req.file.originalname.replace(/\s+/g, "_")}`;
+
+    // Upload to Spaces
+    await s3.send(
+      new PutObjectCommand({
+        Bucket: process.env.SPACES_BUCKET,
+        Key: key,
+        Body: req.file.buffer,
+        ACL: "public-read",
+        ContentType: req.file.mimetype,
+      })
+    );
+
+    const url = `${process.env.SPACES_ENDPOINT}/${process.env.SPACES_BUCKET}/${key}`;
+
     const newImage = new HeroImage({
       number: req.body.number,
-      image: req.file.buffer,
+      url,
+      key,
       contentType: req.file.mimetype,
     });
 
     await newImage.save();
+
     res.status(201).json({ message: "Hero image uploaded successfully", image: newImage });
-  } catch (error) {
-    res.status(500).json({ message: "Error uploading image", error });
+  } catch (error: any) {
+    res.status(500).json({ message: "Error uploading image", error: error.message });
   }
 };
 
-// Get all
-// export const getHeroImages = async (_req: Request, res: Response): Promise<void> => {
-//   try {
-//     const images = await HeroImage.find().sort({ number: 1 });
-//     res.json(images);
-//   } catch (error) {
-//     res.status(500).json({ message: "Error fetching images", error });
-//   }
-// };
-
-export const getHeroImages = async (req: Request, res: Response): Promise<void> => {
+// Get All
+export const getHeroImages = async (_req: Request, res: Response): Promise<void> => {
   try {
     const images = await HeroImage.find().sort({ number: 1 });
-
-    const formatted = images.map((img) => ({
-      _id: img._id,
-      number: img.number,
-      image: `data:${img.contentType};base64,${img.image.toString("base64")}`
-    }));
-
-    res.json(formatted);
+    res.json(images);
   } catch (error: any) {
     res.status(500).json({ message: "Failed to fetch images", error: error.message });
   }
 };
 
-// const department = new departmentModel({
-//       code,
-//       name,
-//       heroImage: {
-//         url: heroImage.path,
-//         public_id: heroImage.filename,
-//       },
-//       about,
-//       hodMessage,
-//       hodName,
-//       hodImage: {
-//         url: hodImage.path,
-//         public_id: hodImage.filename,
-//       },
-//       vision,
-//       mission: parsedMission,
-//       faculty: parsedFaculty
-//     });
-
 // Update
 export const updateHeroImage = async (req: Request, res: Response): Promise<void> => {
   try {
-    const updateData: any = {};
-    if (req.body.number) updateData.number = req.body.number;
+    const existing = await HeroImage.findById(req.params._id);
+    if (!existing) {
+      res.status(404).json({ message: "Hero image not found" });
+      return;
+    }
+
+    let updateData: any = { number: req.body.number || existing.number };
+
     if (req.file) {
-      updateData.image = req.file.buffer;
+      console.log("Updating image...");
+      // Delete old file
+      await s3.send(
+        new DeleteObjectCommand({
+          Bucket: process.env.SPACES_BUCKET,
+          Key: existing.key,
+        })
+      );
+
+      // Upload new file
+      const key = `hero/${uuidv4()}-${req.file.originalname.replace(/\s+/g, "_")}`;
+
+      await s3.send(
+        new PutObjectCommand({
+          Bucket: process.env.SPACES_BUCKET,
+          Key: key,
+          Body: req.file.buffer,
+          ACL: "public-read",
+          ContentType: req.file.mimetype,
+        })
+      );
+
+      updateData.url = `${process.env.SPACES_ENDPOINT}/${process.env.SPACES_BUCKET}/${key}`;
+      updateData.key = key;
       updateData.contentType = req.file.mimetype;
     }
 
     const updated = await HeroImage.findByIdAndUpdate(req.params._id, updateData, { new: true });
 
-    if (!updated) {
-      res.status(404).json({ message: "Hero image not found" });
-      return;
-    }
-
     res.json({ message: "Hero image updated successfully", image: updated });
-  } catch (error) {
-    res.status(500).json({ message: "Error updating image", error });
+  } catch (error: any) {
+    res.status(500).json({ message: "Error updating image", error: error.message });
   }
 };
 
 // Delete
 export const deleteHeroImage = async (req: Request, res: Response): Promise<void> => {
   try {
-    const deleted = await HeroImage.findByIdAndDelete(req.params._id);
-
-    if (!deleted) {
+    const existing = await HeroImage.findById(req.params._id);
+    if (!existing) {
       res.status(404).json({ message: "Hero image not found" });
       return;
     }
 
+    // Delete from Spaces
+    await s3.send(
+      new DeleteObjectCommand({
+        Bucket: process.env.SPACES_BUCKET,
+        Key: existing.key,
+      })
+    );
+
+    // Delete from DB
+    await HeroImage.findByIdAndDelete(req.params._id);
+
     res.json({ message: "Hero image deleted successfully" });
-  } catch (error) {
-    res.status(500).json({ message: "Error deleting image", error });
+  } catch (error: any) {
+    res.status(500).json({ message: "Error deleting image", error: error.message });
   }
 };

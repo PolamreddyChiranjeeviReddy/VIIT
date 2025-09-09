@@ -11,7 +11,7 @@ import {
 
 
 // Update multer configuration
-const upload = multer();
+// const upload = express.Router();
 
 // const storage = multer.diskStorage({
 //   destination: function (req, file, cb) {
@@ -27,6 +27,7 @@ const upload = multer();
 
 
 const router = express.Router();
+const upload = multer({storage: multer.memoryStorage()});
 
 router.post('/add', upload.single("image"), createEvent);
 router.get('/list', getAllEvents);

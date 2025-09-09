@@ -129,13 +129,79 @@
 
 
 
+// import express from "express";
+// import multer from "multer";
+// import { createHeroImage, getHeroImages, updateHeroImage, deleteHeroImage } from "../controllers/heroImageController";
+
+// const router = express.Router();
+// const upload = multer(); // stores files in memory (buffer)
+
+// router.post("/add", upload.single("image"), createHeroImage);
+// router.get("/list", getHeroImages);
+// router.put("/update/:_id", upload.single("image"), updateHeroImage);
+// router.delete("/delete/:_id", deleteHeroImage);
+
+// export default router;
+
+
+
+
+
+
+
+
+
+
+
+
+
+// import express from "express";
+// import multer from "multer";
+// import {
+//   createHeroImage,
+//   getHeroImages,
+//   updateHeroImage,
+//   deleteHeroImage,
+// } from "../controllers/heroImageController";
+
+// const router = express.Router();
+
+// // Multer setup → memory storage for Spaces upload
+// const upload = multer({ storage: multer.memoryStorage() });
+
+// // Routes
+// router.post("/add", upload.single("image"), createHeroImage);
+// router.get("/list", getHeroImages);
+// router.put("/update/:_id", upload.single("image"), updateHeroImage);
+// router.delete("/delete/:_id", deleteHeroImage);
+
+// export default router;
+
+
+
+
+
+
+
+
+
+
+
 import express from "express";
 import multer from "multer";
-import { createHeroImage, getHeroImages, updateHeroImage, deleteHeroImage } from "../controllers/heroImageController";
+import {
+  createHeroImage,
+  getHeroImages,
+  updateHeroImage,
+  deleteHeroImage,
+} from "../controllers/heroImageController";
 
 const router = express.Router();
-const upload = multer(); // stores files in memory (buffer)
 
+// Multer → store in memory
+const upload = multer({ storage: multer.memoryStorage() });
+
+// Routes
 router.post("/add", upload.single("image"), createHeroImage);
 router.get("/list", getHeroImages);
 router.put("/update/:_id", upload.single("image"), updateHeroImage);

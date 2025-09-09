@@ -55,18 +55,93 @@
 
 
 
+// import mongoose, { Document, Schema } from "mongoose";
+
+// export interface HeroImageDoc extends Document {
+//   number: number;
+//   image: Buffer;
+//   contentType: string;
+// }
+
+// const heroImageSchema = new Schema<HeroImageDoc>({
+//   number: { type: Number, required: true },
+//   image: { type: Buffer, required: true },
+//   contentType: { type: String, required: true },
+// });
+
+// export const HeroImage = mongoose.models.heroImage || mongoose.model<HeroImageDoc>("HeroImage", heroImageSchema);
+
+
+
+
+
+
+
+
+
+
+
+
+
+// import mongoose, { Document, Schema } from "mongoose";
+
+// export interface HeroImageDoc extends Document {
+//   number: number;
+//   url: string;
+//   key: string; // file path inside Spaces
+//   contentType: string;
+// }
+
+// const heroImageSchema = new Schema<HeroImageDoc>(
+//   {
+//     number: { type: Number, required: true },
+//     url: { type: String, required: true },
+//     key: { type: String, required: true },
+//     contentType: { type: String, required: true },
+//   },
+//   { timestamps: true }
+// );
+
+// export const HeroImage =
+//   mongoose.models.HeroImage ||
+//   mongoose.model<HeroImageDoc>("HeroImage", heroImageSchema);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 import mongoose, { Document, Schema } from "mongoose";
 
 export interface HeroImageDoc extends Document {
   number: number;
-  image: Buffer;
+  url: string;
+  key: string; // file path inside Spaces
   contentType: string;
 }
 
-const heroImageSchema = new Schema<HeroImageDoc>({
-  number: { type: Number, required: true },
-  image: { type: Buffer, required: true },
-  contentType: { type: String, required: true },
-});
+const heroImageSchema = new Schema<HeroImageDoc>(
+  {
+    number: { type: Number, required: true },
+    url: { type: String, required: true },
+    key: { type: String, required: true },
+    contentType: { type: String, required: true },
+  },
+  { timestamps: true }
+);
 
-export const HeroImage = mongoose.models.heroImage || mongoose.model<HeroImageDoc>("HeroImage", heroImageSchema);
+export const HeroImage =
+  mongoose.models.HeroImage ||
+  mongoose.model<HeroImageDoc>("HeroImage", heroImageSchema);

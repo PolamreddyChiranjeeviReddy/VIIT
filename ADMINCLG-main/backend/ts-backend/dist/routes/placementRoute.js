@@ -7,7 +7,7 @@ const express_1 = __importDefault(require("express"));
 const multer_1 = __importDefault(require("multer"));
 const placementController_1 = require("../controllers/placementController");
 // Update multer configuration
-const upload = (0, multer_1.default)();
+const upload = (0, multer_1.default)({ storage: multer_1.default.memoryStorage() });
 const router = express_1.default.Router();
 // Multiple file upload: image & companyLogo
 router.post('/add', upload.fields([{ name: 'image', maxCount: 1 }, { name: 'companyLogo', maxCount: 1 }]), placementController_1.createPlacement);

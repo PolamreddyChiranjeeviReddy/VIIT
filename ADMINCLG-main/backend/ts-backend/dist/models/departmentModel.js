@@ -127,22 +127,103 @@ Object.defineProperty(exports, "__esModule", { value: true });
 // const departmentModel = mongoose.models.department || mongoose.model<DepartmentDocument>("department", DepartmentSchema);
 // export default departmentModel;
 const mongoose_1 = __importStar(require("mongoose"));
+//Schema Definitions..................................
 const FacultySchema = new mongoose_1.Schema({
-    sno: { type: Number, required: true },
-    name: { type: String, required: true },
-    designation: { type: String, required: true }
+    sno: { type: Number },
+    name: { type: String },
+    designation: { type: String }
+});
+const PlacementStatSchema = new mongoose_1.Schema({
+    overallPlacementPercentage: { type: String },
+    highestPackage: { type: String },
+    averagePackage: { type: String },
+    recruiters: { type: [String] },
+});
+const LabsSchema = new mongoose_1.Schema({
+    name: { type: String, required: false },
+    image: { url: { type: String, required: false },
+        key: { type: String, required: false },
+        contentType: { type: String, required: false }
+    },
+    // image: { type: Buffer, required: false },
+});
+const EventsOrganizedSchema = new mongoose_1.Schema({
+    title: { type: String, required: false },
+    description: { type: String, required: false },
+});
+const SponsoredProjectsSchema = new mongoose_1.Schema({
+    principalInvestigator: { type: String, required: false },
+    researchProjectName: { type: String, required: false },
+    FundingAgency: { type: String, required: false },
+});
+const FacultyAwardsSchema = new mongoose_1.Schema({
+    sno: { type: Number },
+    name: { type: String },
+    count: { type: Number },
+});
+const StudentAwardsSchema = new mongoose_1.Schema({
+    sno: { type: Number },
+    awardName: { type: String },
+    studentsCount: { type: Number },
+});
+const CertificationsSchema = new mongoose_1.Schema({
+    title: { type: String },
+    count: { type: Number },
+});
+const ClubsSchema = new mongoose_1.Schema({
+    clubName: { type: String, required: false },
+    description: { type: String, required: false },
+    image: {
+        url: { type: String, required: false },
+        key: { type: String, required: false },
+        contentType: { type: String, required: false }
+    },
+    studentCoordinator: { type: String, required: false },
+});
+const ResearchSchema = new mongoose_1.Schema({
+    sno: { type: Number },
+    patentTitle: { type: String },
+    agency: { type: String },
+    year: { type: String },
+    status: { type: String },
+});
+const ContactSchema = new mongoose_1.Schema({
+    email: { type: String, required: false },
+    phone: { type: String, required: false },
+    location: { type: String, required: false },
 });
 const DepartmentSchema = new mongoose_1.Schema({
     code: { type: String, required: true, unique: true },
-    name: { type: String, required: true },
-    heroImage: { type: Buffer, required: true },
-    about: { type: String, required: true },
-    hodMessage: { type: String, required: true },
-    hodName: { type: String, required: true },
-    hodImage: { type: Buffer, required: true },
-    vision: { type: String, required: true },
-    mission: { type: [String], required: true },
-    faculty: { type: [FacultySchema], required: true },
+    name: { type: String, required: false },
+    heroImage: {
+        url: { type: String, required: false },
+        key: { type: String, required: false },
+        contentType: { type: String, required: false }
+    },
+    about: { type: String, required: false },
+    hodMessage: { type: String, required: false },
+    hodName: { type: String, required: false },
+    hodImage: {
+        url: { type: String, required: false },
+        key: { type: String, required: false },
+        contentType: { type: String, required: false }
+    },
+    vision: { type: String, required: false },
+    mission: { type: [String], required: false },
+    faculty: { type: [FacultySchema] },
+    peos: { type: [String], required: false },
+    pos: { type: [String], required: false },
+    placementStats: { type: [PlacementStatSchema] },
+    careerSupport: { type: [String], required: false },
+    labs: { type: [LabsSchema], required: false },
+    eventsOrganized: { type: [EventsOrganizedSchema], required: false },
+    sponsoredProjects: { type: [SponsoredProjectsSchema], required: false },
+    facultyAwards: { type: [FacultyAwardsSchema], required: false },
+    studentAwards: { type: [StudentAwardsSchema], required: false },
+    certifications: { type: [CertificationsSchema], required: false },
+    clubs: { type: [ClubsSchema], required: false },
+    research: { type: [ResearchSchema], required: false },
+    contact: { type: ContactSchema, required: false },
 });
 const departmentModel = mongoose_1.default.models.department || mongoose_1.default.model("department", DepartmentSchema);
 exports.default = departmentModel;

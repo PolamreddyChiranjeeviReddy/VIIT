@@ -3,8 +3,16 @@ export interface IPlacement extends mongoose.Document {
     student: string;
     company: string;
     package: string;
-    image: Buffer;
-    companyLogo: Buffer;
+    image: {
+        url: string;
+        key: string;
+        contentType: string;
+    };
+    companyLogo: {
+        url: string;
+        key: string;
+        contentType: string;
+    };
 }
 declare const placementModel: mongoose.Model<any, {}, {}, {}, any, any>;
 export default placementModel;

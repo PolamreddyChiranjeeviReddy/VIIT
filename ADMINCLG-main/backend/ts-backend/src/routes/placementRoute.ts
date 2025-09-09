@@ -9,7 +9,7 @@ import {
 } from '../controllers/placementController';
 
 // Update multer configuration
-const upload = multer();
+const upload = multer({storage: multer.memoryStorage()});
 
 const router = express.Router();
 

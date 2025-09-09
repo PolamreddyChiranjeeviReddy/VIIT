@@ -293,18 +293,15 @@ import multer from "multer";
 import { createDepartment, getDepartment, getDepartmentByCode, updateDepartmentByCode, deleteDepartment } from "../controllers/departmentController";
 
 const router = express.Router();
-const upload = multer(); // stores files in memory (buffer)
 
-router.post("/add", upload.fields([
-    { name: 'heroImage', maxCount: 1 },
-    { name: 'hodImage', maxCount: 1 }
-  ]), createDepartment);
+// Simple multer configuration to handle multipart form data
+const upload = multer({storage: multer.memoryStorage()});
+
+// Define routes
 router.get("/list", getDepartment);
-router.put("/update/:_id", upload.fields([
-    { name: 'heroImage', maxCount: 1 },
-    { name: 'hodImage', maxCount: 1 }
-  ]), updateDepartmentByCode);
 router.get("/list/:code", getDepartmentByCode);
+router.post("/add", upload.any(), createDepartment);
+router.put("/update/:_id", upload.any(), updateDepartmentByCode);
 router.delete("/delete/:_id", deleteDepartment);
 
 export default router;

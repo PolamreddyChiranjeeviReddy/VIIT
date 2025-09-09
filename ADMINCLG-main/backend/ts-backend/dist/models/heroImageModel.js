@@ -75,11 +75,44 @@ exports.HeroImage = void 0;
 //   mongoose.models.heroImage ||
 //   mongoose.model<HeroImageDocument>('heroImage', HeroImageSchema);
 // export default heroImageModel;
+// import mongoose, { Document, Schema } from "mongoose";
+// export interface HeroImageDoc extends Document {
+//   number: number;
+//   image: Buffer;
+//   contentType: string;
+// }
+// const heroImageSchema = new Schema<HeroImageDoc>({
+//   number: { type: Number, required: true },
+//   image: { type: Buffer, required: true },
+//   contentType: { type: String, required: true },
+// });
+// export const HeroImage = mongoose.models.heroImage || mongoose.model<HeroImageDoc>("HeroImage", heroImageSchema);
+// import mongoose, { Document, Schema } from "mongoose";
+// export interface HeroImageDoc extends Document {
+//   number: number;
+//   url: string;
+//   key: string; // file path inside Spaces
+//   contentType: string;
+// }
+// const heroImageSchema = new Schema<HeroImageDoc>(
+//   {
+//     number: { type: Number, required: true },
+//     url: { type: String, required: true },
+//     key: { type: String, required: true },
+//     contentType: { type: String, required: true },
+//   },
+//   { timestamps: true }
+// );
+// export const HeroImage =
+//   mongoose.models.HeroImage ||
+//   mongoose.model<HeroImageDoc>("HeroImage", heroImageSchema);
 const mongoose_1 = __importStar(require("mongoose"));
 const heroImageSchema = new mongoose_1.Schema({
     number: { type: Number, required: true },
-    image: { type: Buffer, required: true },
+    url: { type: String, required: true },
+    key: { type: String, required: true },
     contentType: { type: String, required: true },
-});
-exports.HeroImage = mongoose_1.default.models.heroImage || mongoose_1.default.model("HeroImage", heroImageSchema);
+}, { timestamps: true });
+exports.HeroImage = mongoose_1.default.models.HeroImage ||
+    mongoose_1.default.model("HeroImage", heroImageSchema);
 //# sourceMappingURL=heroImageModel.js.map

@@ -7,21 +7,21 @@ const mongoose_1 = __importDefault(require("mongoose"));
 const AnnouncementSchema = new mongoose_1.default.Schema({
     date: {
         type: String,
-        required: true,
+        required: false,
     },
     title: {
         type: String,
-        required: true,
+        required: false,
         trim: true,
     },
     path: {
         type: String,
-        required: true,
+        required: false,
         trim: true,
     },
     description: {
         type: String,
-        required: true,
+        required: false,
         trim: true,
     }
 }, { timestamps: true });

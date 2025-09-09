@@ -4,17 +4,33 @@ export interface IPlacement extends mongoose.Document {
   student: string;
   company: string;
   package: string;
-  image: Buffer; // Uploaded student image
-  companyLogo: Buffer; // Uploaded company logo
+  image:{
+    url: string;
+    key: string;
+    contentType: string;
+  } // Uploaded student image
+  companyLogo: {
+    url: string;
+    key: string;
+    contentType: string;
+  }; // Uploaded company logo
 }
 
 const PlacementSchema = new mongoose.Schema<IPlacement>(
   {
-    student: { type: String, required: true },
-    company: { type: String, required: true },
-    package: { type: String, required: true },
-    image:   {type:Buffer,  required:true},        // Uploaded student image
-    companyLogo: {type:Buffer, required:true},  // Uploaded company logo
+    student: { type: String, required: false },
+    company: { type: String, required: false },
+    package: { type: String, required: false },
+    image:   {
+      url: { type: String, required: false },
+      key: { type: String, required: false },
+      contentType: { type: String, required: false },
+    },        // Uploaded student image
+    companyLogo: {
+      url: { type: String, required: false },
+      key: { type: String, required: false },
+      contentType: { type: String, required: false },
+    },  // Uploaded company logo
   },
   { timestamps: true }
 );

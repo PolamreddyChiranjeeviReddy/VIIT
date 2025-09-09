@@ -59,7 +59,7 @@ const mongoose_1 = __importDefault(require("mongoose"));
 const cookie_parser_1 = __importDefault(require("cookie-parser"));
 const cors_1 = __importDefault(require("cors"));
 const dotenv_1 = __importDefault(require("dotenv"));
-const path_1 = __importDefault(require("path"));
+// import path from 'path';
 const departmentRoute_1 = __importDefault(require("./routes/departmentRoute"));
 const userRoute_1 = __importDefault(require("./routes/userRoute"));
 const newsEventsRoute_1 = __importDefault(require("./routes/newsEventsRoute"));
@@ -69,17 +69,21 @@ const placementRoute_1 = __importDefault(require("./routes/placementRoute"));
 dotenv_1.default.config();
 const app = (0, express_1.default)();
 // Middleware
-app.use((req, res, next) => {
-    console.log(`⭐ ${req.method} ${req.url}`);
-    next();
-});
+// app.use((req, res, next) => {
+//   console.log(`⭐ ${req.method} ${req.url}`);
+//   next();
+// });
 // app.use(cors({ origin: true, credentials: true }));
 app.use((0, cors_1.default)({
     origin: [
         'http://localhost:5173',
-        'https://vignanwebsite.vercel.app',
-        'https://vignansfrontendadmin.vercel.app',
-        'https://viitadminfrontend.onrender.com',
+        'http://localhost:5176',
+        'http://localhost:5174',
+        'http://localhost:5175',
+        // 'https://viit-portal.onrender.com',
+        // 'https://vignanwebsite.vercel.app',
+        // 'https://vignansfrontendadmin.vercel.app',
+        // 'https://viitadminfrontend.onrender.com',
     ],
     credentials: true
 }));
@@ -88,20 +92,20 @@ app.use((0, cookie_parser_1.default)());
 // app.use(cors());
 app.use(express_1.default.json());
 app.use(express_1.default.urlencoded({ extended: true }));
-app.use('/uploads', express_1.default.static(path_1.default.join(__dirname, 'uploads')));
+// app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 // Routes
 app.use('/api/department', departmentRoute_1.default);
 app.use('/api/user', userRoute_1.default);
 app.use('/api/newsEvents', newsEventsRoute_1.default);
 app.use('/api/heroImage', heroImageRoute_1.default);
-app.use("/images", express_1.default.static('uploads'));
+// app.use("/images",express.static('uploads'));
 app.use("/api/announcement", announcementRoute_1.default);
 app.use("/api/placement", placementRoute_1.default);
 // app.use('')
 // MongoDB Connection
 mongoose_1.default.connect(process.env.MONGO_URI || '')
     .then(() => {
-    console.log('MongoDB connected');
+    // console.log('MongoDB connected');
     app.listen(5000, () => console.log('Server running on port 5000'));
 })
     .catch(err => console.error('MongoDB connection error:', err));

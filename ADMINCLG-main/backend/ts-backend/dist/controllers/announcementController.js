@@ -5,7 +5,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteAnnouncement = exports.updateAnnouncement = exports.getAnnouncements = exports.createAnnouncement = void 0;
 const announcementModel_1 = __importDefault(require("../models/announcementModel"));
-// 📌 Create Announcement
+//  Create Announcement
 const createAnnouncement = async (req, res) => {
     try {
         // console.log("hello");
@@ -27,18 +27,34 @@ const createAnnouncement = async (req, res) => {
     }
 };
 exports.createAnnouncement = createAnnouncement;
-// 📌 Get All Announcements
+// Get All Announcements
 const getAnnouncements = async (_req, res) => {
     try {
-        const announcements = await announcementModel_1.default.find().sort({ date: -1 });
-        res.status(200).json(announcements);
+        const announcements = await announcementModel_1.default.find().sort({ date: 1 });
+        const formatted = announcements.map((announcement) => {
+            let safePathlink = announcement.path;
+            // If the pathlink is a full external URL, wrap it in our safe redirect link
+            if (announcement.path && (announcement.path.startsWith('https://'))) {
+                // We MUST encode the URL so it can be passed as a parameter safely
+                safePathlink = `/redirect?url=${encodeURIComponent(announcement.path)}`;
+            }
+            return {
+                _id: announcement._id,
+                title: announcement.title,
+                date: announcement.date,
+                description: announcement.description,
+                path: safePathlink, // Send the NEW, SAFE pathlink to the frontend
+            };
+        });
+        res.status(200).json(formatted);
+        // res.status(200).json(announcements);
     }
     catch (error) {
         res.status(500).json({ success: false, message: "Server Error", error });
     }
 };
 exports.getAnnouncements = getAnnouncements;
-// 📌 Update Announcement
+//  Update Announcement
 const updateAnnouncement = async (req, res) => {
     try {
         const { date, title, path, description } = req.body;
@@ -54,7 +70,7 @@ const updateAnnouncement = async (req, res) => {
     }
 };
 exports.updateAnnouncement = updateAnnouncement;
-// 📌 Delete Announcement
+//  Delete Announcement
 const deleteAnnouncement = async (req, res) => {
     try {
         const deleted = await announcementModel_1.default.findByIdAndDelete(req.params._id);

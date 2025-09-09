@@ -11,21 +11,21 @@ const AnnouncementSchema = new mongoose.Schema<IAnnouncement>(
   {
     date: {
       type: String,
-      required: true,
+      required: false,
     },
     title: {
       type: String,
-      required: true,
+      required: false,
       trim: true,
     },
     path: {
       type: String,
-      required: true,
+      required: false,
       trim: true,
     },
     description: {
         type: String,
-        required: true,
+        required: false,
         trim: true,
     }
   },
