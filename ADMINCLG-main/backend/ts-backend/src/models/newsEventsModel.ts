@@ -6,6 +6,7 @@ export interface INewsEvent extends Document {
   date: string;
   description: string;
   pathlink: string;
+  location:string;
   // image: Buffer;
   image:{
     url: string;
@@ -22,6 +23,7 @@ const NewsEventSchema = new mongoose.Schema<INewsEvent>(
     date: { type: String, required: false },
     description: { type: String, required: false },
     pathlink: {type: String, required: false},
+    location: {type: String, required: false},
     image: {
       url: { type: String, required: false },
       key: { type: String, required: false },

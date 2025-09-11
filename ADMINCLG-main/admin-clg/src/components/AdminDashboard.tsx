@@ -1728,7 +1728,7 @@ interface Department {
 }
 
 // interface ImageFile { url: string; key: string; contentType: string; }
-interface NewsEvent { _id: string; type: string; title: string; date: string; description: string; pathlink: string; image: ImageFile; bgColor: string; }
+interface NewsEvent { _id: string; type: string; title: string; date: string; description: string; pathlink: string; location: string; image: ImageFile; bgColor: string; }
 interface HeroImage { _id: string; number: number; url: string; key: string; contentType: string; }
 interface Announcement {_id: string; date: string; title: string; path: string; description: string;}
 interface Placement {_id:string; student: string; company: string; package: string; image: ImageFile; companyLogo: ImageFile;}
@@ -2980,9 +2980,23 @@ const NewsEventForm = ({ onFormSubmit, initialData, onCancel }: { onFormSubmit: 
           required
         />
       </div>
-            <div style={styles.formActions}><button type="submit" style={styles.submitButton}>{initialData ? 'Update Item' : 'Create Item'}</button><button type="button" onClick={onCancel} style={styles.cancelButton}>Cancel</button></div>
-        </form>
-    );
+      <div style={styles.formGroup}>
+        <label style={styles.label}>Location</label>
+        <input
+          type="text"
+          name="location"
+          style={styles.input}
+          defaultValue={initialData?.location}
+          placeholder="e.g., Room No, Building, Campus Address"
+          required
+        />
+      </div>
+      <div style={styles.formActions}>
+        <button type="submit" style={styles.submitButton}>{initialData ? 'Update Item' : 'Create Item'}</button>
+        <button type="button" onClick={onCancel} style={styles.cancelButton}>Cancel</button>
+      </div>
+    </form>
+  );
 };
 
 
@@ -3225,7 +3239,8 @@ const AdminDashboard = () => {
                 // { header: 'Type', accessor: (item: NewsEvent) => <span style={item.type === 'Event' ? styles.eventBadge : styles.newsBadge}>{item.type}</span> }, 
                 { header: 'Type', accessor: (item: NewsEvent) => <span style={styles.eventBadge}>{item?.type || 'N/A'}</span> , truncate: false }, 
                 { header: 'BG Color', accessor: (item: NewsEvent) => item?.bgColor ? <div style={{...styles.colorSwatch, backgroundColor: item.bgColor}}></div> : 'N/A' , truncate: false}, 
-                { header: 'Date', accessor: (item: NewsEvent) => item?.date ? new Date(item.date).toLocaleDateString() : 'N/A', truncate: false}
+                { header: 'Date', accessor: (item: NewsEvent) => item?.date ? new Date(item.date).toLocaleDateString() : 'N/A', truncate: false},
+                { header: 'Location', accessor: (item: NewsEvent) => item?.location || 'N/A', truncate: false}
                  ] },
         'Hero Images': { endpoint: 'heroImage', 
             listColumns: [{ 
