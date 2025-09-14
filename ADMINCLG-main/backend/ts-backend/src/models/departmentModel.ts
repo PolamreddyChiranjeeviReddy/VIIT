@@ -118,11 +118,21 @@ interface FacultyMember {
   designation: string;
 }
 
+interface RecruiterImage {
+  url: string;
+  key: string;
+  contentType: string;
+}
+
 interface Placementstat {
   overallPlacementPercentage: String;
   highestPackage: String;
   averagePackage: String;
-  recruiters: String[];
+  // recruiters: {
+  //   url: string;
+  //   key: string;
+  //   contentType: string;
+  // }[];
 }
 
 interface labs {
@@ -213,6 +223,7 @@ export interface DepartmentDocument extends Document {
   peos: string[];
   pos: string[];
   placementStats: Placementstat[];
+   recruiters: RecruiterImage[];
   careerSupport: string[];
   labs: labs[];
   eventsOrganized: EventsOrganized[];
@@ -236,11 +247,17 @@ const FacultySchema: Schema = new Schema({
 });
 
 
+const RecruiterImageSchema: Schema = new Schema({
+  url: { type: String, required: false },
+  key: { type: String, required: false },
+  contentType: { type: String, required: false }
+});
+
 const PlacementStatSchema: Schema = new Schema({
   overallPlacementPercentage: { type: String },
   highestPackage: { type: String },
   averagePackage: { type: String },
-  recruiters: { type: [String] },
+  // recruiters: { type: [RecruiterImageSchema], required: false },
 }); 
 
 const LabsSchema: Schema = new Schema({
@@ -327,6 +344,7 @@ const DepartmentSchema: Schema = new Schema({
   peos: { type: [String], required: false  },
   pos: { type: [String], required: false  },
   placementStats: { type: [PlacementStatSchema] },
+  recruiters: { type: [RecruiterImageSchema], required: false },
   careerSupport: { type: [String], required: false  },
   labs: { type: [LabsSchema], required: false  },
   eventsOrganized: { type: [EventsOrganizedSchema], required: false  },

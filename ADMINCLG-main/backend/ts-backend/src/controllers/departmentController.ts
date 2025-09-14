@@ -830,6 +830,7 @@ export const createDepartment = async (req: Request, res: Response) => {
     const hodImageFile = files.find((f) => f.fieldname === "hodImage");
     const labImageFiles = files.filter((f) => f.fieldname === "labImages");
     const clubImageFiles = files.filter((f) => f.fieldname === "clubImages");
+    const recruiterImageFiles = files.filter((f) => f.fieldname === "recruiterImages");
 
     if (!heroImageFile || !hodImageFile) {
       return res
@@ -870,6 +871,27 @@ export const createDepartment = async (req: Request, res: Response) => {
       key: hodKey,
       contentType: hodImageFile.mimetype,
     };
+
+    // ===== Upload Recruiter Images =====
+    const recruiters = await Promise.all(
+      recruiterImageFiles.map(async (file) => {
+        const recruiterKey = `department/recruiterImages/${uuidv4()}-${file.originalname.replace(/\s+/g, "_")}`;
+        await s3.send(
+          new PutObjectCommand({
+            Bucket: process.env.SPACES_BUCKET!,
+            Key: recruiterKey,
+            Body: file.buffer,
+            ACL: "public-read",
+            ContentType: file.mimetype,
+          })
+        );
+        return {
+          url: `${process.env.SPACES_ENDPOINT}/${process.env.SPACES_BUCKET}/${recruiterKey}`,
+          key: recruiterKey,
+          contentType: file.mimetype,
+        };
+      })
+    );
 
     // ===== Upload Lab Images =====
     const labNames = req.body.labNames
@@ -997,6 +1019,7 @@ export const createDepartment = async (req: Request, res: Response) => {
       pos: parsedData.pos,
       faculty: parsedData.faculty,
       placementStats: parsedData.placementStats,
+      recruiters,
       careerSupport: parsedData.careerSupport,
       labs,
       eventsOrganized: parsedData.eventsOrganized,
@@ -1208,6 +1231,8 @@ export const updateDepartmentByCode = async (req: Request, res: Response) => {
 
     const files = (req.files as unknown as Express.Multer.File[]) || [];
 
+    // --- 1. Handle Multiple File Uploads (Recruiters) ---
+
     // --- 2. Handle Single Image Updates (Hero & HOD) ---
     const heroImageFile = files.find(f => f.fieldname === "heroImage");
     if (heroImageFile) {
@@ -1224,6 +1249,8 @@ export const updateDepartmentByCode = async (req: Request, res: Response) => {
       }
       department.hodImage = await uploadFileToS3(hodImageFile, "department/hodImage");
     }
+
+
 
     // --- 3. Synchronize Labs ---
     if (req.body.labs) {
@@ -1292,6 +1319,48 @@ export const updateDepartmentByCode = async (req: Request, res: Response) => {
           return { ...club, image: imagePayload };
         })
       );
+    }
+
+    // --- 5. Synchronize Recruiters ---
+    // ✅ --- 5. Synchronize Recruiters (REPLACEMENT LOGIC) ---
+    if (req.body.recruiters) {
+      const incomingRecruiters = JSON.parse(req.body.recruiters);
+      const recruiterImageFiles = files.filter(f => f.fieldname === "recruiterImages");
+      const recruiterImageMap = new Map(recruiterImageFiles.map(file => [file.originalname, file]));
+
+      // Identify and delete recruiters & images that were removed from the frontend
+      const incomingRecruiterIds = incomingRecruiters
+        .map((recruiter: any) => recruiter._id)
+        .filter(Boolean); // Filter out new images which won't have an _id
+
+      for (const existingRecruiter of department.recruiters) {
+        if (!incomingRecruiterIds.includes(existingRecruiter._id.toString())) {
+          // This recruiter was deleted by the user
+          if (existingRecruiter.key) {
+            await deleteFileFromS3(existingRecruiter.key);
+          }
+        }
+      }
+
+      // Process incoming recruiters to update existing ones or create new ones
+      department.recruiters = await Promise.all(
+        incomingRecruiters.map(async (recruiter: any) => {
+          // ✅ FIX: Check for the 'newImageName' signal from the frontend
+          if (recruiter.newImageName) {
+            // This is a NEW image that needs to be uploaded.
+            const newImageFile = recruiterImageMap.get(recruiter.newImageName);
+            if (newImageFile) {
+              // Upload it to S3 and return the full image object
+              return await uploadFileToS3(newImageFile, "department/recruiterImages");
+            }
+            // If file not found (shouldn't happen), return null and filter out later
+            return null; 
+          } else {
+            // This is an EXISTING image. Return its data as is.
+            return recruiter;
+          }
+        })
+      ).then(results => results.filter(Boolean)); // Filter out any null results
     }
 
     const updatedDepartment = await department.save();
@@ -1436,6 +1505,11 @@ export const deleteDepartment = async (req: Request, res: Response) => {
 
     if (department.heroImage?.key) deleteKeys.push(department.heroImage.key);
     if (department.hodImage?.key) deleteKeys.push(department.hodImage.key);
+    if (Array.isArray(department.recruiters)) {
+      department.recruiters.forEach((rec: any) => {
+        if (rec.key) deleteKeys.push(rec.key);
+      });
+    } 
 
     if (Array.isArray(department.labs)) {
       department.labs.forEach((lab: any) => {
@@ -1471,7 +1545,6 @@ export const deleteDepartment = async (req: Request, res: Response) => {
       .json({ error: err.message || "Server error while deleting department" });
   }
 };
-
 
 
 

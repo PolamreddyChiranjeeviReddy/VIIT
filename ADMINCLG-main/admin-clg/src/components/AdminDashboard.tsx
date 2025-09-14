@@ -1683,11 +1683,11 @@ const ColorPicker = ({ name, initialValue = '#3498db' }: { name: string; initial
 // --- TYPE DEFINITIONS ---
 interface ImageFile { url: string; key: string; contentType: string; }
 interface FacultyMember { sno: number; name: string; designation: string; }
+interface RecruiterImage { url: string; key: string; contentType: string; file?: File; }
 interface PlacementStat {
     overallPlacementPercentage: string;
     highestPackage: string;
     averagePackage: string;
-    recruiters: string[];
 }
 interface Lab { name: string; image: ImageFile; file?: File; }
 interface EventOrganized { title: string; description: string; }
@@ -1715,6 +1715,7 @@ interface Department {
   pos: string[];
   faculty: FacultyMember[]; 
   placementStats: PlacementStat[];
+  recruiters: RecruiterImage[];
   careerSupport: string[];
   labs: Lab[];
   eventsOrganized: EventOrganized[];
@@ -1751,6 +1752,7 @@ const DepartmentForm = ({ onFormSubmit, initialData, onCancel }: DepartmentFormP
   const [peos, setPeos] = useState<string[]>(['']);
   const [pos, setPos] = useState<string[]>(['']);
   const [faculty, setFaculty] = useState<FacultyMember[]>([{ sno: 1, name: '', designation: '' }]);
+  const [recruiters, setRecruiters] = useState<RecruiterImage[]>([]);
   const [placementStats, setPlacementStats] = useState<PlacementStat[]>([{ overallPlacementPercentage: '', highestPackage: '', averagePackage: '', recruiters: [''] }]);
   const [careerSupport, setCareerSupport] = useState<string[]>(['']);
   const [labs, setLabs] = useState<Lab[]>([{ name: '', image: null }]);
@@ -1764,6 +1766,7 @@ const DepartmentForm = ({ onFormSubmit, initialData, onCancel }: DepartmentFormP
   const [contact, setContact] = useState<Contact>({ email: '', phone: '', location: '' });
 
   // Refs for image inputs to manually clear them if needed
+  const recruiterInputRef = useRef<HTMLInputElement>(null);
   const hodImageRef = useRef<HTMLInputElement>(null);
   const heroImageRef = useRef<HTMLInputElement>(null);
   // Using an array of refs for dynamic image inputs
@@ -1777,7 +1780,8 @@ const DepartmentForm = ({ onFormSubmit, initialData, onCancel }: DepartmentFormP
       setPeos(initialData.peos && initialData.peos.length > 0 ? initialData.peos : ['']);
       setPos(initialData.pos && initialData.pos.length > 0 ? initialData.pos : ['']);
       setFaculty(initialData.faculty && initialData.faculty.length > 0 ? initialData.faculty : [{ sno: 1, name: '', designation: '' }]);
-      setPlacementStats(initialData.placementStats && initialData.placementStats.length > 0 ? initialData.placementStats.map(ps => ({...ps, recruiters: ps.recruiters && ps.recruiters.length > 0 ? ps.recruiters : ['']})) : [{ overallPlacementPercentage: '', highestPackage: '', averagePackage: '', recruiters: [''] }]);
+      setPlacementStats(initialData.placementStats?.length > 0 ? initialData.placementStats : [{ overallPlacementPercentage: '', highestPackage: '', averagePackage: '' }]);
+            setRecruiters(initialData.recruiters || []);
       setCareerSupport(initialData.careerSupport && initialData.careerSupport.length > 0 ? initialData.careerSupport : ['']);
       setLabs(initialData.labs && initialData.labs.length > 0 ? initialData.labs.map(lab => ({...lab, image: lab.image as ImageFile})) : [{ name: '', image: { url: '', key: '', contentType: '' } }]);
       setEventsOrganized(initialData.eventsOrganized && initialData.eventsOrganized.length > 0 ? initialData.eventsOrganized : [{ title: '', description: '' }]);
@@ -1793,7 +1797,8 @@ const DepartmentForm = ({ onFormSubmit, initialData, onCancel }: DepartmentFormP
       setPeos(['']);
       setPos(['']);
       setFaculty([{ sno: 1, name: '', designation: '' }]);
-      setPlacementStats([{ overallPlacementPercentage: '', highestPackage: '', averagePackage: '', recruiters: [''] }]);
+      setPlacementStats([{ overallPlacementPercentage: '', highestPackage: '', averagePackage: '' }]);
+      setRecruiters([]);
       setCareerSupport(['']);
       setLabs([{ name: '', image: { url: '', key: '', contentType: '' } }]);
       setEventsOrganized([{ title: '', description: '' }]);
@@ -1914,12 +1919,44 @@ const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     formData.set('contact', JSON.stringify(contact));
 
     // Handle nested arrays within placementStats
-    const validPlacementStats = placementStats.map(ps => ({
-        ...ps,
-        recruiters: ps.recruiters.filter(r => r.trim())
-    })).filter(ps => ps.overallPlacementPercentage.trim() || ps.highestPackage.trim() || ps.averagePackage.trim() || ps.recruiters.length > 0);
+    // const validPlacementStats = placementStats.map(ps => ({
+    //     ...ps,
+    //     recruiters: ps.recruiters.filter(r => r.trim())
+    // })).filter(ps => ps.overallPlacementPercentage.trim() || ps.highestPackage.trim() || ps.averagePackage.trim() || ps.recruiters.length > 0);
+    // formData.set('placementStats', JSON.stringify(validPlacementStats));
+
+    const validPlacementStats = placementStats.filter(ps => ps.overallPlacementPercentage.trim() || ps.highestPackage.trim() || ps.averagePackage.trim());
     formData.set('placementStats', JSON.stringify(validPlacementStats));
 
+
+        // ✅ NEW: Synchronize Recruiters with the special signal
+    const recruitersData = recruiters.map(rec => {
+        // ✅ FIX: If it's a new file (has a .file property), send a special signal.
+        if (rec.file) {
+            // This tells the backend: "This is a new image. Find the uploaded file with this name."
+            return { newImageName: rec.file.name };
+        }
+        // If it's an existing image, just send its metadata back.
+        const { file, ...metadata } = rec; // Exclude the frontend-only 'file' property
+        return metadata;
+    });
+    formData.set('recruiters', JSON.stringify(recruitersData));
+
+    // Append only the new recruiter image files to the FormData object
+    recruiters.forEach(rec => {
+        if (rec.file) {
+            // The third argument (filename) is CRITICAL for the backend to map the file.
+            formData.append('recruiterImages', rec.file, rec.file.name);
+        }
+    });
+    //     const recruitersData = recruiters.map(({ file, ...metadata }) => metadata);
+    // formData.set('recruiters', JSON.stringify(recruitersData));
+
+    // recruiters.forEach(rec => {
+    //     if (rec.file) {
+    //         formData.append('recruiterImages', rec.file, rec.file.name);
+    //     }
+    // });
 
     // --- Part 2: Handle Labs and Clubs for full synchronization ---
     // This logic precisely matches what your new backend update function expects.
@@ -1978,35 +2015,51 @@ const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
   };
 
   // Specific handlers for nested arrays (e.g., recruiters within placementStats)
-  const handleRecruiterChange = (placementIndex: number, recruiterIndex: number, value: string) => {
-    setPlacementStats(prevStats => prevStats.map((stat, sIdx) => {
-      if (sIdx === placementIndex) {
-        const newRecruiters = [...stat.recruiters];
-        newRecruiters[recruiterIndex] = value;
-        return { ...stat, recruiters: newRecruiters };
-      }
-      return stat;
-    }));
+  // const handleRecruiterChange = (placementIndex: number, recruiterIndex: number, value: string) => {
+  //   setPlacementStats(prevStats => prevStats.map((stat, sIdx) => {
+  //     if (sIdx === placementIndex) {
+  //       const newRecruiters = [...stat.recruiters];
+  //       newRecruiters[recruiterIndex] = value;
+  //       return { ...stat, recruiters: newRecruiters };
+  //     }
+  //     return stat;
+  //   }));
+  // };
+
+  // const addRecruiter = (placementIndex: number) => {
+  //   setPlacementStats(prevStats => prevStats.map((stat, sIdx) => {
+  //     if (sIdx === placementIndex) {
+  //       return { ...stat, recruiters: [...stat.recruiters, ''] };
+  //     }
+  //     return stat;
+  //   }));
+  // };
+
+  // const removeRecruiter = (placementIndex: number, recruiterIndex: number) => {
+  //   setPlacementStats(prevStats => prevStats.map((stat, sIdx) => {
+  //     if (sIdx === placementIndex) {
+  //       return { ...stat, recruiters: stat.recruiters.filter((_, rIdx) => rIdx !== recruiterIndex) };
+  //     }
+  //     return stat;
+  //   }));
+  // };
+
+    const handleAddRecruiterImages = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.files) {
+      const files = Array.from(event.target.files);
+      const newRecruiters: RecruiterImage[] = files.map(file => ({
+        file: file,
+        url: URL.createObjectURL(file), // Temporary preview URL
+        key: '', 
+        contentType: file.type,
+      }));
+      setRecruiters(prev => [...prev, ...newRecruiters]);
+    }
   };
 
-  const addRecruiter = (placementIndex: number) => {
-    setPlacementStats(prevStats => prevStats.map((stat, sIdx) => {
-      if (sIdx === placementIndex) {
-        return { ...stat, recruiters: [...stat.recruiters, ''] };
-      }
-      return stat;
-    }));
+    const handleRemoveRecruiter = (indexToRemove: number) => {
+    setRecruiters(prev => prev.filter((_, index) => index !== indexToRemove));
   };
-
-  const removeRecruiter = (placementIndex: number, recruiterIndex: number) => {
-    setPlacementStats(prevStats => prevStats.map((stat, sIdx) => {
-      if (sIdx === placementIndex) {
-        return { ...stat, recruiters: stat.recruiters.filter((_, rIdx) => rIdx !== recruiterIndex) };
-      }
-      return stat;
-    }));
-  };
-
   // Image file change handlers for labs and clubs
 
       const handleLabImageChange = (index: number, file: File | null) => {
@@ -2293,7 +2346,7 @@ const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         </button>
       </div>
 
-      <h3>Placement Statistics</h3>
+      {/* <h3>Placement Statistics</h3>
       <div style={styles.formGroup}>
         {placementStats.map((stat, statIndex) => (
           <div key={statIndex} style={{...styles.section, marginBottom: '20px'}}>
@@ -2367,7 +2420,69 @@ const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
       <button type="button" onClick={() => addArrayItem(setPlacementStats, { overallPlacementPercentage: '', highestPackage: '', averagePackage: '', recruiters: [''] })} style={styles.addButton}>
         Add Placement Stat Section
       </button>
-    </div>
+    </div> */}
+
+          <h3>Placement Statistics</h3>
+      <div style={styles.formGroup}>
+        {placementStats.map((stat, statIndex) => (
+          <div key={statIndex} style={{...styles.section, marginBottom: '20px'}}>
+            <div style={styles.formRow}>
+              <div style={{...styles.formGroup, flex: 1, marginRight: '10px'}}>
+                <label style={styles.label}>Overall Placement Percentage</label>
+                <input type="text" value={stat.overallPlacementPercentage} onChange={(e) => handleArrayChange(setPlacementStats, placementStats, statIndex, 'overallPlacementPercentage', e.target.value)} style={styles.input} placeholder="e.g., 90%" />
+              </div>
+              <div style={{...styles.formGroup, flex: 1, marginLeft: '10px'}}>
+                <label style={styles.label}>Highest Package</label>
+                <input type="text" value={stat.highestPackage} onChange={(e) => handleArrayChange(setPlacementStats, placementStats, statIndex, 'highestPackage', e.target.value)} style={styles.input} placeholder="e.g., 20 LPA"/>
+              </div>
+            </div>
+             <div style={styles.formRow}>
+              <div style={{...styles.formGroup, flex: 1, marginRight: '10px'}}>
+                <label style={styles.label}>Average Package</label>
+                <input type="text" value={stat.averagePackage} onChange={(e) => handleArrayChange(setPlacementStats, placementStats, statIndex, 'averagePackage', e.target.value)} style={styles.input} placeholder="e.g., 7 LPA"/>
+              </div>
+            </div>
+          </div>
+        ))}
+        <button type="button" onClick={() => addArrayItem(setPlacementStats, { overallPlacementPercentage: '', highestPackage: '', averagePackage: '' })} style={styles.addButton}>
+          Add Placement Stat Section
+        </button>
+      </div>
+
+      {/* ✅ NEW: Dedicated section for Recruiter Images */}
+      <h3>Recruiters</h3>
+      <div style={styles.formGroup}>
+        <div style={recruiterStyles.grid}>
+          {recruiters.map((recruiter, index) => (
+            <div key={index} style={recruiterStyles.card}>
+              <img src={recruiter.url} alt="Recruiter logo" style={recruiterStyles.image} />
+              <button
+                type="button"
+                onClick={() => handleRemoveRecruiter(index)}
+                style={recruiterStyles.deleteButton}
+                title="Remove Recruiter"
+              >
+                <CrossIcon />
+              </button>
+            </div>
+          ))}
+        </div>
+        <input
+          type="file"
+          accept="image/*"
+          multiple
+          ref={recruiterInputRef}
+          onChange={handleAddRecruiterImages}
+          style={{ display: 'none' }}
+        />
+        <button
+          type="button"
+          onClick={() => recruiterInputRef.current?.click()}
+          style={styles.addButton}
+        >
+          Add Recruiter Images
+        </button>
+      </div>
 
     <h3>Career Support</h3>
     <div style={styles.formGroup}>
@@ -3487,6 +3602,45 @@ const AdminDashboard = () => {
 };
 
 // --- Centralized & Enhanced Styles ---
+// ✅ ADD THIS ENTIRE OBJECT at the end of your file
+
+const recruiterStyles: { [key: string]: CSSProperties } = {
+  grid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fill, minmax(120px, 1fr))',
+    gap: '16px',
+    marginBottom: '16px',
+  },
+  card: {
+    position: 'relative',
+    border: '1px solid var(--border-color)',
+    borderRadius: '8px',
+    overflow: 'hidden',
+    aspectRatio: '1 / 1',
+  },
+  image: {
+    width: '100%',
+    height: '100%',
+    objectFit: 'contain',
+    padding: '8px',
+  },
+  deleteButton: {
+    position: 'absolute',
+    top: '4px',
+    right: '4px',
+    background: 'rgba(0, 0, 0, 0.6)',
+    color: 'white',
+    border: 'none',
+    borderRadius: '50%',
+    width: '24px',
+    height: '24px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    cursor: 'pointer',
+    padding: '0',
+  },
+};
 const styles: { [key: string]: CSSProperties } = {
 
   // ADD THESE TO YOUR EXISTING styles OBJECT
