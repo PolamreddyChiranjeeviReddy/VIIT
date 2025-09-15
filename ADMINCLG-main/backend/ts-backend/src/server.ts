@@ -93,6 +93,8 @@ const app = express();
 // app.use(cors({ origin: true, credentials: true }));
 app.use(cors({
   origin: [
+    'https://vignaniit.edu.in',
+    'www.https://vignaniit.edu.in/',
     'https://vignan.blr1.cdn.digitaloceanspaces.com/animation/lv_0_20250729191233_1.mp4',
     'https://vignan.blr1.cdn.digitaloceanspaces.com/animation/lv_0_20250728171716_1.mp4',
     'https://admin-viit.onrender.com',
