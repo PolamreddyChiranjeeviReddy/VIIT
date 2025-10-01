@@ -144,6 +144,15 @@ interface labs {
   };
 }
 
+interface TeachingAndLearning {
+  TALImages: {
+    url: string;
+    key: string;
+    contentType: string;
+  };
+  TALDescription: String;
+}
+
 interface EventsOrganized {
   title: String;
   description: String;
@@ -222,8 +231,9 @@ export interface DepartmentDocument extends Document {
   faculty: FacultyMember[];
   peos: string[];
   pos: string[];
+  teachingAndLearning: TeachingAndLearning[];
   placementStats: Placementstat[];
-   recruiters: RecruiterImage[];
+  recruiters: RecruiterImage[];
   careerSupport: string[];
   labs: labs[];
   eventsOrganized: EventsOrganized[];
@@ -291,6 +301,15 @@ const StudentAwardsSchema: Schema = new Schema({
   studentsCount: { type: Number },
 });
 
+const TeachingAndLearningSchema: Schema = new Schema({
+  TALImages: {
+    url: { type: String, required: false },
+    key: { type: String, required: false },
+    contentType: { type: String, required: false }
+  },
+  TALDescription: { type: String, required: false },
+});
+
 const CertificationsSchema: Schema = new Schema({
   title: { type: String },
   count: { type: Number },
@@ -343,6 +362,7 @@ const DepartmentSchema: Schema = new Schema({
   faculty: { type: [FacultySchema] },
   peos: { type: [String], required: false  },
   pos: { type: [String], required: false  },
+  teachingAndLearning: { type: [TeachingAndLearningSchema], required: false  },
   placementStats: { type: [PlacementStatSchema] },
   recruiters: { type: [RecruiterImageSchema], required: false },
   careerSupport: { type: [String], required: false  },

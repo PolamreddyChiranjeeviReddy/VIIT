@@ -965,6 +965,78 @@ export const createDepartment = async (req: Request, res: Response) => {
       })
     );
 
+    // //upload teaching and learning images
+    // // ✅ NEW: Correctly filter for TALImages
+    // const TALImageFiles = files.filter((f) => f.fieldname === "TALImages");
+
+    // // ... (logic for uploading hero, hod, recruiters, labs, clubs is correct)
+
+    // // ✅ CORRECTED: Logic for Uploading Teaching and Learning Images
+    // const TALDescriptions = req.body.TALDescriptions
+    //   ? Array.isArray(req.body.TALDescriptions)
+    //     ? req.body.TALDescriptions
+    //     : [req.body.TALDescriptions]
+    //   : [];
+
+    // const teachingAndLearning = await Promise.all(
+    //   // Use the correct file array: TALImageFiles
+    //   TALImageFiles.map(async (file, index) => {
+    //     const TALKey = `department/teachingAndLearning/${uuidv4()}-${file.originalname.replace(/\s+/g, "_")}`;
+    //     await s3.send(
+    //       new PutObjectCommand({
+    //         Bucket: process.env.SPACES_BUCKET!,
+    //         Key: TALKey,
+    //         Body: file.buffer,
+    //         ACL: "public-read",
+    //         ContentType: file.mimetype,
+    //       })
+    //     );
+    //     return {
+    //       TALDescription: TALDescriptions[index] || "", // Use TALDescriptions
+    //       TALImages: { // Schema field is TALImages (plural)
+    //         url: `${process.env.SPACES_ENDPOINT}/${process.env.SPACES_BUCKET}/${TALKey}`,
+    //         key: TALKey,
+    //         contentType: file.mimetype,
+    //       },
+    //     };
+    //   })
+    // );  
+    const uploadFileToS3 = async (file: Express.Multer.File, path: string): Promise<ImageFile> => {
+  const key = `${path}/${uuidv4()}-${file.originalname.replace(/\s+/g, "_")}`;
+  
+  await s3.send(
+    new PutObjectCommand({
+      Bucket: process.env.SPACES_BUCKET!,
+      Key: key,
+      Body: file.buffer,
+      ACL: "public-read",
+      ContentType: file.mimetype,
+    })
+  );
+
+  return {
+    url: `${process.env.SPACES_ENDPOINT}/${process.env.SPACES_BUCKET}/${key}`,
+    key: key,
+    contentType: file.mimetype,
+  };
+};
+
+    const incomingTAL = req.body.teachingAndLearning ? JSON.parse(req.body.teachingAndLearning) : [];
+    const TALImageFiles = files.filter(f => f.fieldname === "TALImages");
+    const TALImageMap = new Map(TALImageFiles.map(file => [file.originalname, file]));
+
+    const teachingAndLearning = await Promise.all(
+      incomingTAL.map(async (tal: any) => {
+        const imageFile = TALImageMap.get(tal.newImageName); 
+        if (imageFile) {
+          const uploadedImage = await uploadFileToS3(imageFile, "department/teachingAndLearning");
+          return { TALDescription: tal.TALDescription, TALImages: uploadedImage };
+        }
+        return { TALDescription: tal.TALDescription, TALImages: null };
+      })
+    );
+  
+
     // ===== Parse JSON Arrays =====
     const parsedData = {
       mission: typeof mission === "string" ? JSON.parse(mission) : mission,
@@ -1017,6 +1089,7 @@ export const createDepartment = async (req: Request, res: Response) => {
       mission: parsedData.mission,
       peos: parsedData.peos,
       pos: parsedData.pos,
+      teachingAndLearning,
       faculty: parsedData.faculty,
       placementStats: parsedData.placementStats,
       recruiters,
@@ -1321,6 +1394,57 @@ export const updateDepartmentByCode = async (req: Request, res: Response) => {
       );
     }
 
+    // --- 4. Synchronize Teaching and Learning Images ---
+    // ✅ CORRECTED: Logic for Synchronizing Teaching and Learning
+    if (req.body.teachingAndLearning) {
+      console.log(req.body.teachingAndLearning);
+      const incomingTAL = JSON.parse(req.body.teachingAndLearning);
+      
+      // Correctly filter for the new T&L images
+      const TALImageFiles = files.filter(f => f.fieldname === "TALImages");
+      
+      // Map new files by their original name for easy lookup
+      const TALImageMap = new Map(TALImageFiles.map(file => [file.originalname, file]));
+
+      // Identify and delete T&L items that were removed
+      const incomingTALIds = incomingTAL.map((tal: any) => tal._id).filter(Boolean);
+      for (const existingTAL of department.teachingAndLearning) {
+        if (!incomingTALIds.includes(existingTAL._id.toString())) {
+          if (existingTAL.TALImages?.key) {
+            await deleteFileFromS3(existingTAL.TALImages.key);
+          }
+        }
+      }
+
+      // Process incoming T&L items to update/create
+      department.teachingAndLearning = await Promise.all(
+        incomingTAL.map(async (tal: any) => {
+          let imagePayload = tal.TALImages; // Default to existing image object
+
+          // Check if a new file was uploaded for this item.
+          // The frontend should send a special 'newImageName' property for this.
+          if (tal.newImageName) {
+            const newImageFile = TALImageMap.get(tal.newImageName);
+            if (newImageFile) {
+              // If there's a new file, delete the old image if it exists
+              if (tal.TALImages?.key) {
+                await deleteFileFromS3(tal.TALImages.key);
+              }
+              // Upload the new image
+              imagePayload = await uploadFileToS3(newImageFile, "department/teachingAndLearning");
+            }
+          }
+          
+          return {
+              _id: tal._id,
+              TALDescription: tal.TALDescription,
+              TALImages: imagePayload
+          };
+        })
+      );
+    }
+
+
     // --- 5. Synchronize Recruiters ---
     // ✅ --- 5. Synchronize Recruiters (REPLACEMENT LOGIC) ---
     if (req.body.recruiters) {
@@ -1490,59 +1614,98 @@ export const updateDepartmentByCode = async (req: Request, res: Response) => {
 // Delete department by _id
 // -----------------------------
 
+// export const deleteDepartment = async (req: Request, res: Response) => {
+//   try {
+//     const { _id } = req.params;
+
+//     // 1. Find the department
+//     const department = await departmentModel.findById(_id);
+//     if (!department) {
+//       return res.status(404).json({ error: "Department not found" });
+//     }
+
+//     // 2. Collect all S3 keys for deletion (if stored in Spaces)
+//     const deleteKeys: string[] = [];
+
+//     if (department.heroImage?.key) deleteKeys.push(department.heroImage.key);
+//     if (department.hodImage?.key) deleteKeys.push(department.hodImage.key);
+//     if (Array.isArray(department.recruiters)) {
+//       department.recruiters.forEach((rec: any) => {
+//         if (rec.key) deleteKeys.push(rec.key);
+//       });
+//     } 
+
+//     if (Array.isArray(department.labs)) {
+//       department.labs.forEach((lab: any) => {
+//         if (lab.image?.key) deleteKeys.push(lab.image.key);
+//       });
+//     }
+
+//     if (Array.isArray(department.clubs)) {
+//       department.clubs.forEach((club: any) => {
+//         if (club.image?.key) deleteKeys.push(club.image.key);
+//       });
+//     }
+
+//     // 3. Delete images from S3
+//     for (const key of deleteKeys) {
+//       await s3.send(
+//         new DeleteObjectCommand({
+//           Bucket: process.env.SPACES_BUCKET!,
+//           Key: key,
+//         })
+//       );
+//     }
+
+//     // 4. Delete department record from DB
+//     await department.deleteOne();
+
+//     res.status(200).json({ message: "Department deleted successfully" });
+//   } catch (error: unknown) {
+//     const err = error as Error;
+//     console.error("Error deleting department:", err);
+//     res
+//       .status(500)
+//       .json({ error: err.message || "Server error while deleting department" });
+//   }
+// };
+
+
+
 export const deleteDepartment = async (req: Request, res: Response) => {
   try {
     const { _id } = req.params;
-
-    // 1. Find the department
     const department = await departmentModel.findById(_id);
     if (!department) {
       return res.status(404).json({ error: "Department not found" });
     }
 
-    // 2. Collect all S3 keys for deletion (if stored in Spaces)
     const deleteKeys: string[] = [];
-
     if (department.heroImage?.key) deleteKeys.push(department.heroImage.key);
     if (department.hodImage?.key) deleteKeys.push(department.hodImage.key);
-    if (Array.isArray(department.recruiters)) {
-      department.recruiters.forEach((rec: any) => {
-        if (rec.key) deleteKeys.push(rec.key);
-      });
-    } 
+    department.recruiters?.forEach((rec: any) => { if (rec.key) deleteKeys.push(rec.key); });
+    department.labs?.forEach((lab: any) => { if (lab.image?.key) deleteKeys.push(lab.image.key); });
+    department.clubs?.forEach((club: any) => { if (club.image?.key) deleteKeys.push(club.image.key); });
 
-    if (Array.isArray(department.labs)) {
-      department.labs.forEach((lab: any) => {
-        if (lab.image?.key) deleteKeys.push(lab.image.key);
-      });
-    }
+    // ✅ NEW: Add logic to collect keys from teachingAndLearning
+    department.teachingAndLearning?.forEach((tal: any) => {
+      if (tal.TALImages?.key) {
+        deleteKeys.push(tal.TALImages.key);
+      }
+    });
 
-    if (Array.isArray(department.clubs)) {
-      department.clubs.forEach((club: any) => {
-        if (club.image?.key) deleteKeys.push(club.image.key);
-      });
-    }
-
-    // 3. Delete images from S3
+    // Delete all collected keys from S3
     for (const key of deleteKeys) {
-      await s3.send(
-        new DeleteObjectCommand({
-          Bucket: process.env.SPACES_BUCKET!,
-          Key: key,
-        })
-      );
+      await deleteFileFromS3(key);
     }
 
-    // 4. Delete department record from DB
+    // Delete department record from DB
     await department.deleteOne();
 
     res.status(200).json({ message: "Department deleted successfully" });
-  } catch (error: unknown) {
-    const err = error as Error;
-    console.error("Error deleting department:", err);
-    res
-      .status(500)
-      .json({ error: err.message || "Server error while deleting department" });
+  } catch (error: any) {
+    console.error("Error deleting department:", error);
+    res.status(500).json({ error: "Server error", details: error.message });
   }
 };
 

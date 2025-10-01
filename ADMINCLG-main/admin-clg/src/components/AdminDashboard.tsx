@@ -1690,6 +1690,11 @@ interface PlacementStat {
     averagePackage: string;
 }
 interface Lab { name: string; image: ImageFile; file?: File; }
+interface TeachingAndLearning {
+  TALImages: ImageFile;
+  TALDescription: string;
+  file?: File; // For frontend state management only
+}
 interface EventOrganized { title: string; description: string; }
 interface SponsoredProject { principalInvestigator: string; researchProjectName: string; fundingAgency: string; }
 interface FacultyAward { sno: number; name: string; count: number; }
@@ -1713,6 +1718,7 @@ interface Department {
   mission: string[]; 
   peos: string[]; 
   pos: string[];
+  teachingAndLearning: TeachingAndLearning[];
   faculty: FacultyMember[]; 
   placementStats: PlacementStat[];
   recruiters: RecruiterImage[];
@@ -1751,6 +1757,7 @@ const DepartmentForm = ({ onFormSubmit, initialData, onCancel }: DepartmentFormP
   const [missionPoints, setMissionPoints] = useState<string[]>(['']);
   const [peos, setPeos] = useState<string[]>(['']);
   const [pos, setPos] = useState<string[]>(['']);
+  const [teachingAndLearning, setTeachingAndLearning] = useState<TeachingAndLearning[]>([{ TALDescription: '', TALImages: { url: '', key: '', contentType: '' } }]);
   const [faculty, setFaculty] = useState<FacultyMember[]>([{ sno: 1, name: '', designation: '' }]);
   const [recruiters, setRecruiters] = useState<RecruiterImage[]>([]);
   const [placementStats, setPlacementStats] = useState<PlacementStat[]>([{ overallPlacementPercentage: '', highestPackage: '', averagePackage: '', recruiters: [''] }]);
@@ -1772,6 +1779,7 @@ const DepartmentForm = ({ onFormSubmit, initialData, onCancel }: DepartmentFormP
   // Using an array of refs for dynamic image inputs
   const labImageRefs = useRef<Array<React.RefObject<HTMLInputElement>>>([]);
   const clubImageRefs = useRef<Array<React.RefObject<HTMLInputElement>>>([]);
+  const talImageRefs = useRef<Array<React.RefObject<HTMLInputElement>>>([]);
 
   // Initialize form data when editing
   useEffect(() => {
@@ -1779,6 +1787,8 @@ const DepartmentForm = ({ onFormSubmit, initialData, onCancel }: DepartmentFormP
       setMissionPoints(initialData.mission && initialData.mission.length > 0 ? initialData.mission : ['']);
       setPeos(initialData.peos && initialData.peos.length > 0 ? initialData.peos : ['']);
       setPos(initialData.pos && initialData.pos.length > 0 ? initialData.pos : ['']);
+      // ✅ ADD THIS LINE to populate the new state
+      setTeachingAndLearning(initialData.teachingAndLearning?.length > 0 ? initialData.teachingAndLearning.map(tal => ({...tal, TALImages: tal.TALImages || {url:'', key:'', contentType:''}})) : [{ TALDescription: '', TALImages: { url: '', key: '', contentType: '' } }]);
       setFaculty(initialData.faculty && initialData.faculty.length > 0 ? initialData.faculty : [{ sno: 1, name: '', designation: '' }]);
       setPlacementStats(initialData.placementStats?.length > 0 ? initialData.placementStats : [{ overallPlacementPercentage: '', highestPackage: '', averagePackage: '' }]);
             setRecruiters(initialData.recruiters || []);
@@ -1796,6 +1806,7 @@ const DepartmentForm = ({ onFormSubmit, initialData, onCancel }: DepartmentFormP
       setMissionPoints(['']);
       setPeos(['']);
       setPos(['']);
+      setTeachingAndLearning([{ TALDescription: '', TALImages: { url: '', key: '', contentType: '' } }]);
       setFaculty([{ sno: 1, name: '', designation: '' }]);
       setPlacementStats([{ overallPlacementPercentage: '', highestPackage: '', averagePackage: '' }]);
       setRecruiters([]);
@@ -1813,7 +1824,7 @@ const DepartmentForm = ({ onFormSubmit, initialData, onCancel }: DepartmentFormP
     // Update labImageRefs and clubImageRefs arrays based on initialData
     labImageRefs.current = labs.map((_, i) => labImageRefs.current[i] || React.createRef());
     clubImageRefs.current = clubs.map((_, i) => clubImageRefs.current[i] || React.createRef());
-
+    talImageRefs.current = teachingAndLearning.map((_, i) => talImageRefs.current[i] || React.createRef());
   }, [initialData]);
 
   const safeParseInt = (val: string, fallback = 0) => {
@@ -1989,6 +2000,30 @@ const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         }
     });
 
+    const talData = teachingAndLearning
+      .filter(item => item.TALDescription.trim()) // Ignore empty rows
+      .map(({ file, ...metadata }) => {
+        // If a new file was selected for this item...
+        if (file) {
+          // ...add a special 'newImageName' property to its metadata.
+          // This tells the backend to find the uploaded file with this exact name.
+          return { ...metadata, newImageName: file.name };
+        }
+        // If it's an existing item with no new file, just send its old metadata back.
+        return metadata;
+      });
+    // Send the complete, final state of the T&L metadata to the backend.
+    formData.set('teachingAndLearning', JSON.stringify(talData));
+
+    // Now, loop again and append ONLY the new image files.
+    teachingAndLearning.forEach(item => {
+      if (item.file) {
+          // The key MUST be 'TALImages' (plural) to match the backend filter.
+          // The third argument (the filename) is CRITICAL for the backend to map the file.
+          formData.append('TALImages', item.file, item.file.name);
+      }
+    });
+
     // Finally, submit the fully prepared FormData object
     onFormSubmit(formData);
 };
@@ -2125,6 +2160,23 @@ const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
       })
     );
   };
+
+
+  const handleTALImageChange = (index: number, file: File | null) => {
+    setTeachingAndLearning(prevTAL =>
+      prevTAL.map((item, i) => {
+        if (i === index) {
+          return {
+            ...item,
+            TALImages: file ? { ...item.TALImages, url: URL.createObjectURL(file) } : { url: '', key: '', contentType: '' },
+            file: file || undefined,
+          };
+        }
+        return item;
+      })
+    );
+  };
+
 
   return (
     <form onSubmit={handleSubmit} style={styles.form}>
@@ -2307,6 +2359,41 @@ const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
           Add PO
         </button>
       </div>
+
+
+      <h3>Teaching & Learning</h3>
+      <div style={styles.formGroup}>
+        {teachingAndLearning.map((item, index) => (
+          <div key={index} style={{...styles.section, marginBottom: '20px'}}>
+            <div style={styles.formGroup}>
+              <label style={styles.label}>Description</label>
+              <textarea 
+                value={item.TALDescription}
+                onChange={(e) => handleArrayChange(setTeachingAndLearning, teachingAndLearning, index, 'TALDescription', e.target.value)}
+                style={styles.textarea}
+                placeholder="Enter a description for the image..."
+              />
+            </div>
+            <div style={{flex: 1}}>
+              <ImageUpload 
+                label="Image"
+                name={`TALImages-${index}`} // Unique name for each image
+                initialImage={item.TALImages?.url}
+                onChange={(file) => handleTALImageChange(index, file)}
+              />
+            </div>
+            {teachingAndLearning.length > 1 && (
+              <button type="button" onClick={() => removeArrayItem(setTeachingAndLearning, teachingAndLearning, index)} style={styles.removeSectionButton}>
+                  Remove Entry
+              </button>
+            )}
+          </div>
+        ))}
+        <button type="button" onClick={() => addArrayItem(setTeachingAndLearning, { TALDescription: '', TALImages: { url: '', key: '', contentType: '' } })} style={styles.addButton}>
+          Add Teaching & Learning Entry
+        </button>
+      </div>  
+
 
       <h3>Faculty Members</h3>
       <div style={styles.formGroup}>
@@ -3415,8 +3502,8 @@ const AdminDashboard = () => {
              endpoint = isUpdating ? `${API_BASE_URL}/api/${config.endpoint}/update/${_id}` : `${API_BASE_URL}/api/${config.endpoint}/add`; }
         setLoading(true); setError(null);
         try {
-            // console.log('Submitting Department Form:', Object.fromEntries(formData.entries()));
-            // console.log(endpoint,formData);
+            console.log('Submitting Department Form:', Object.fromEntries(formData.entries()));
+            console.log(endpoint,formData);
             const response = await fetch(endpoint, { method, body: formData });
             
             // Check content type to avoid JSON parsing errors
