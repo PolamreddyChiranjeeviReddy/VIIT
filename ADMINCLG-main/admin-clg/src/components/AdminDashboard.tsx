@@ -3502,8 +3502,8 @@ const AdminDashboard = () => {
              endpoint = isUpdating ? `${API_BASE_URL}/api/${config.endpoint}/update/${_id}` : `${API_BASE_URL}/api/${config.endpoint}/add`; }
         setLoading(true); setError(null);
         try {
-            console.log('Submitting Department Form:', Object.fromEntries(formData.entries()));
-            console.log(endpoint,formData);
+            // console.log('Submitting Department Form:', Object.fromEntries(formData.entries()));
+            // console.log(endpoint,formData);
             const response = await fetch(endpoint, { method, body: formData });
             
             // Check content type to avoid JSON parsing errors
