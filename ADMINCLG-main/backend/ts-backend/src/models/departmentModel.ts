@@ -231,6 +231,7 @@ export interface DepartmentDocument extends Document {
   faculty: FacultyMember[];
   peos: string[];
   pos: string[];
+  psos: string[];
   teachingAndLearning: TeachingAndLearning[];
   placementStats: Placementstat[];
   recruiters: RecruiterImage[];
@@ -362,6 +363,7 @@ const DepartmentSchema: Schema = new Schema({
   faculty: { type: [FacultySchema] },
   peos: { type: [String], required: false  },
   pos: { type: [String], required: false  },
+  psos: { type: [String], required: false  },
   teachingAndLearning: { type: [TeachingAndLearningSchema], required: false  },
   placementStats: { type: [PlacementStatSchema] },
   recruiters: { type: [RecruiterImageSchema], required: false },

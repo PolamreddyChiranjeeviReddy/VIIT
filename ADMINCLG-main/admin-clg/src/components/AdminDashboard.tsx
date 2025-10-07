@@ -1718,6 +1718,7 @@ interface Department {
   mission: string[]; 
   peos: string[]; 
   pos: string[];
+  psos: string[];
   teachingAndLearning: TeachingAndLearning[];
   faculty: FacultyMember[]; 
   placementStats: PlacementStat[];
@@ -1757,6 +1758,7 @@ const DepartmentForm = ({ onFormSubmit, initialData, onCancel }: DepartmentFormP
   const [missionPoints, setMissionPoints] = useState<string[]>(['']);
   const [peos, setPeos] = useState<string[]>(['']);
   const [pos, setPos] = useState<string[]>(['']);
+  const [psos, setPsos] = useState<string[]>(['']);
   const [teachingAndLearning, setTeachingAndLearning] = useState<TeachingAndLearning[]>([{ TALDescription: '', TALImages: { url: '', key: '', contentType: '' } }]);
   const [faculty, setFaculty] = useState<FacultyMember[]>([{ sno: 1, name: '', designation: '' }]);
   const [recruiters, setRecruiters] = useState<RecruiterImage[]>([]);
@@ -1787,6 +1789,7 @@ const DepartmentForm = ({ onFormSubmit, initialData, onCancel }: DepartmentFormP
       setMissionPoints(initialData.mission && initialData.mission.length > 0 ? initialData.mission : ['']);
       setPeos(initialData.peos && initialData.peos.length > 0 ? initialData.peos : ['']);
       setPos(initialData.pos && initialData.pos.length > 0 ? initialData.pos : ['']);
+      setPsos(initialData.psos && initialData.psos.length > 0 ? initialData.psos : ['']);
       // ✅ ADD THIS LINE to populate the new state
       setTeachingAndLearning(initialData.teachingAndLearning?.length > 0 ? initialData.teachingAndLearning.map(tal => ({...tal, TALImages: tal.TALImages || {url:'', key:'', contentType:''}})) : [{ TALDescription: '', TALImages: { url: '', key: '', contentType: '' } }]);
       setFaculty(initialData.faculty && initialData.faculty.length > 0 ? initialData.faculty : [{ sno: 1, name: '', designation: '' }]);
@@ -1806,6 +1809,7 @@ const DepartmentForm = ({ onFormSubmit, initialData, onCancel }: DepartmentFormP
       setMissionPoints(['']);
       setPeos(['']);
       setPos(['']);
+      setPsos(['']);
       setTeachingAndLearning([{ TALDescription: '', TALImages: { url: '', key: '', contentType: '' } }]);
       setFaculty([{ sno: 1, name: '', designation: '' }]);
       setPlacementStats([{ overallPlacementPercentage: '', highestPackage: '', averagePackage: '' }]);
@@ -1919,6 +1923,7 @@ const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     formData.set('mission', JSON.stringify(missionPoints.filter(p => p.trim())));
     formData.set('peos', JSON.stringify(peos.filter(p => p.trim())));
     formData.set('pos', JSON.stringify(pos.filter(p => p.trim())));
+    formData.set('psos', JSON.stringify(psos.filter(p => p.trim())));
     formData.set('faculty', JSON.stringify(faculty.filter(f => f.name.trim() && f.designation.trim())));
     formData.set('careerSupport', JSON.stringify(careerSupport.filter(p => p.trim())));
     formData.set('eventsOrganized', JSON.stringify(eventsOrganized.filter(e => e.title.trim() || e.description.trim())));
@@ -2332,7 +2337,7 @@ const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
 
 
       <div style={styles.formGroup}>
-        <label style={styles.label}>POs</label>
+        <label style={styles.label}>PSOs</label>
         {pos.map((point, index) => (
           <div key={index} style={{display: 'flex', alignItems: 'center', marginBottom: '8px'}}>
             <input 
@@ -2343,7 +2348,7 @@ const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
                 setPos(newPos);
               }}
               style={{...styles.input, flex: 1}}
-              placeholder={`PO ${index + 1}`}
+              placeholder={`PSO ${index + 1}`}
             />
             <button 
               type="button"
@@ -2356,6 +2361,36 @@ const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
           </div>
         ))}
         <button type="button" onClick={() => addArrayItem(setPos, '')} style={styles.addButton}>
+          Add PSO
+        </button>
+      </div>
+
+
+            <div style={styles.formGroup}>
+        <label style={styles.label}>POs</label>
+        {psos.map((point, index) => (
+          <div key={index} style={{display: 'flex', alignItems: 'center', marginBottom: '8px'}}>
+            <input 
+              value={point}
+              onChange={(e) => {
+                const newPsos = [...psos];
+                newPsos[index] = e.target.value;
+                setPsos(newPsos);
+              }}
+              style={{...styles.input, flex: 1}}
+              placeholder={`PO ${index + 1}`}
+            />
+            <button 
+              type="button"
+              onClick={() => removeArrayItem(setPsos, psos, index)}
+              style={styles.removeButton}
+              title="Delete Point"
+            >
+              <TrashIcon />
+            </button>
+          </div>
+        ))}
+        <button type="button" onClick={() => addArrayItem(setPsos, '')} style={styles.addButton}>
           Add PO
         </button>
       </div>

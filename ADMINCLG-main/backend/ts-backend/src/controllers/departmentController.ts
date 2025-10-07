@@ -808,6 +808,7 @@ export const createDepartment = async (req: Request, res: Response) => {
       mission,
       peos,
       pos,
+      psos,
       faculty,
       placementStats,
       careerSupport,
@@ -1042,6 +1043,7 @@ export const createDepartment = async (req: Request, res: Response) => {
       mission: typeof mission === "string" ? JSON.parse(mission) : mission,
       peos: typeof peos === "string" ? JSON.parse(peos) : peos,
       pos: typeof pos === "string" ? JSON.parse(pos) : pos,
+      psos: typeof psos === "string" ? JSON.parse(psos) : psos,
       faculty: typeof faculty === "string" ? JSON.parse(faculty) : faculty,
       placementStats:
         typeof placementStats === "string"
@@ -1089,6 +1091,7 @@ export const createDepartment = async (req: Request, res: Response) => {
       mission: parsedData.mission,
       peos: parsedData.peos,
       pos: parsedData.pos,
+      psos: parsedData.psos,
       teachingAndLearning,
       faculty: parsedData.faculty,
       placementStats: parsedData.placementStats,
@@ -1281,7 +1284,7 @@ export const updateDepartmentByCode = async (req: Request, res: Response) => {
     // --- 1. Basic & JSON Field Updates ---
     const fieldsToUpdate = [
       'code', 'name', 'about', 'hodName', 'hodMessage', 'vision', 'mission',
-      'peos', 'pos', 'faculty', 'placementStats', 'careerSupport',
+      'peos', 'pos', 'psos', 'faculty', 'placementStats', 'careerSupport',
       'eventsOrganized', 'sponsoredProjects', 'facultyAwards', 'studentAwards',
       'certifications', 'research', 'contact'
     ];
@@ -1290,7 +1293,7 @@ export const updateDepartmentByCode = async (req: Request, res: Response) => {
       if (req.body[field]) {
         try {
             // Check if it's a field that needs parsing
-            if (['mission', 'peos', 'pos', 'faculty', 'placementStats', 'careerSupport', 'eventsOrganized', 'sponsoredProjects', 'facultyAwards', 'studentAwards', 'certifications', 'research', 'contact'].includes(field)) {
+            if (['mission', 'peos', 'pos', 'psos', 'faculty', 'placementStats', 'careerSupport', 'eventsOrganized', 'sponsoredProjects', 'facultyAwards', 'studentAwards', 'certifications', 'research', 'contact'].includes(field)) {
                  (department as any)[field] = JSON.parse(req.body[field]);
             } else {
                  (department as any)[field] = req.body[field];
