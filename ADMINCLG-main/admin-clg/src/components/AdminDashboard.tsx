@@ -1680,6 +1680,56 @@ const ColorPicker = ({ name, initialValue = '#3498db' }: { name: string; initial
     );
 }
 
+const PDFUpload = ({ label, name, initialPDF, onChange }: 
+  { label: string; name: string; initialPDF?: string | null; onChange?: (file: File | null) => void; }) => {
+    const [pdfName, setPdfName] = useState<string | null>(null);
+    const inputRef = useRef<HTMLInputElement>(null);
+    
+    useEffect(() => {
+      if (initialPDF) {
+        // Extract filename from URL or use a default name
+        const filename = initialPDF.split('/').pop() || 'existing.pdf';
+        setPdfName(filename);
+      } else {
+        setPdfName(null);
+      }
+    }, [initialPDF]);
+
+    return (
+        <div style={styles.formGroup}>
+            <label style={styles.label}>{label}</label>
+            <div className="upload-box" style={styles.uploadBox} onClick={() => inputRef.current?.click()}>
+                <input 
+                  ref={inputRef} 
+                  type="file" 
+                  name={name} 
+                  accept="application/pdf" 
+                  onChange={(e) => { 
+                    const file = e.target.files?.[0]; 
+                    if(file) { 
+                      setPdfName(file.name);
+                      onChange && onChange(file);
+                    } else {
+                      setPdfName(null);
+                      onChange && onChange(null);
+                    }
+                  }} 
+                  style={{ display: 'none' }} 
+                />
+                {pdfName ? (
+                  <div style={{padding: '20px', textAlign: 'center'}}>
+                    <div style={{fontSize: '40px', marginBottom: '10px'}}>📄</div>
+                    <div style={{fontSize: '14px', color: 'var(--text-primary)', wordBreak: 'break-word'}}>{pdfName}</div>
+                    <div style={{fontSize: '12px', color: 'var(--text-secondary)', marginTop: '5px'}}>Click to change PDF</div>
+                  </div>
+                ) : (
+                  <div style={styles.uploadPlaceholder}><UploadCloudIcon /><span>Upload PDF</span></div>
+                )}
+            </div>
+        </div>
+    );
+};
+
 // --- TYPE DEFINITIONS ---
 interface ImageFile { url: string; key: string; contentType: string; }
 interface FacultyMember { sno: number; name: string; designation: string; }
@@ -1688,6 +1738,7 @@ interface PlacementStat {
     overallPlacementPercentage: string;
     highestPackage: string;
     averagePackage: string;
+    recruiters: string[];
 }
 interface Lab { name: string; image: ImageFile; file?: File; }
 interface TeachingAndLearning {
@@ -1695,6 +1746,8 @@ interface TeachingAndLearning {
   TALDescription: string;
   file?: File; // For frontend state management only
 }
+interface DDCMinute { name: string; pdf: ImageFile; file?: File; }
+interface BOSMinute { name: string; pdf: ImageFile; file?: File; }
 interface EventOrganized { title: string; description: string; }
 interface SponsoredProject { principalInvestigator: string; researchProjectName: string; fundingAgency: string; }
 interface FacultyAward { sno: number; name: string; count: number; }
@@ -1720,6 +1773,8 @@ interface Department {
   pos: string[];
   psos: string[];
   teachingAndLearning: TeachingAndLearning[];
+  ddcMinutes: DDCMinute[];
+  bosMinutes: BOSMinute[];
   faculty: FacultyMember[]; 
   placementStats: PlacementStat[];
   recruiters: RecruiterImage[];
@@ -1760,6 +1815,8 @@ const DepartmentForm = ({ onFormSubmit, initialData, onCancel }: DepartmentFormP
   const [pos, setPos] = useState<string[]>(['']);
   const [psos, setPsos] = useState<string[]>(['']);
   const [teachingAndLearning, setTeachingAndLearning] = useState<TeachingAndLearning[]>([{ TALDescription: '', TALImages: { url: '', key: '', contentType: '' } }]);
+  const [ddcMinutes, setDdcMinutes] = useState<DDCMinute[]>([{ name: '', pdf: { url: '', key: '', contentType: '' } }]);
+  const [bosMinutes, setBosMinutes] = useState<BOSMinute[]>([{ name: '', pdf: { url: '', key: '', contentType: '' } }]);
   const [faculty, setFaculty] = useState<FacultyMember[]>([{ sno: 1, name: '', designation: '' }]);
   const [recruiters, setRecruiters] = useState<RecruiterImage[]>([]);
   const [placementStats, setPlacementStats] = useState<PlacementStat[]>([{ overallPlacementPercentage: '', highestPackage: '', averagePackage: '', recruiters: [''] }]);
@@ -1792,8 +1849,10 @@ const DepartmentForm = ({ onFormSubmit, initialData, onCancel }: DepartmentFormP
       setPsos(initialData.psos && initialData.psos.length > 0 ? initialData.psos : ['']);
       // ✅ ADD THIS LINE to populate the new state
       setTeachingAndLearning(initialData.teachingAndLearning?.length > 0 ? initialData.teachingAndLearning.map(tal => ({...tal, TALImages: tal.TALImages || {url:'', key:'', contentType:''}})) : [{ TALDescription: '', TALImages: { url: '', key: '', contentType: '' } }]);
+      setDdcMinutes(initialData.ddcMinutes?.length > 0 ? initialData.ddcMinutes.map(ddc => ({...ddc, pdf: ddc.pdf || {url:'', key:'', contentType:''}})) : [{ name: '', pdf: { url: '', key: '', contentType: '' } }]);
+      setBosMinutes(initialData.bosMinutes?.length > 0 ? initialData.bosMinutes.map(bos => ({...bos, pdf: bos.pdf || {url:'', key:'', contentType:''}})) : [{ name: '', pdf: { url: '', key: '', contentType: '' } }]);
       setFaculty(initialData.faculty && initialData.faculty.length > 0 ? initialData.faculty : [{ sno: 1, name: '', designation: '' }]);
-      setPlacementStats(initialData.placementStats?.length > 0 ? initialData.placementStats : [{ overallPlacementPercentage: '', highestPackage: '', averagePackage: '' }]);
+      setPlacementStats(initialData.placementStats?.length > 0 ? initialData.placementStats : [{ overallPlacementPercentage: '', highestPackage: '', averagePackage: '', recruiters: [''] }]);
             setRecruiters(initialData.recruiters || []);
       setCareerSupport(initialData.careerSupport && initialData.careerSupport.length > 0 ? initialData.careerSupport : ['']);
       setLabs(initialData.labs && initialData.labs.length > 0 ? initialData.labs.map(lab => ({...lab, image: lab.image as ImageFile})) : [{ name: '', image: { url: '', key: '', contentType: '' } }]);
@@ -1811,8 +1870,10 @@ const DepartmentForm = ({ onFormSubmit, initialData, onCancel }: DepartmentFormP
       setPos(['']);
       setPsos(['']);
       setTeachingAndLearning([{ TALDescription: '', TALImages: { url: '', key: '', contentType: '' } }]);
+      setDdcMinutes([{ name: '', pdf: { url: '', key: '', contentType: '' } }]);
+      setBosMinutes([{ name: '', pdf: { url: '', key: '', contentType: '' } }]);
       setFaculty([{ sno: 1, name: '', designation: '' }]);
-      setPlacementStats([{ overallPlacementPercentage: '', highestPackage: '', averagePackage: '' }]);
+      setPlacementStats([{ overallPlacementPercentage: '', highestPackage: '', averagePackage: '', recruiters: [''] }]);
       setRecruiters([]);
       setCareerSupport(['']);
       setLabs([{ name: '', image: { url: '', key: '', contentType: '' } }]);
@@ -2029,6 +2090,38 @@ const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
       }
     });
 
+    // DDC Minutes handling
+    const ddcData = ddcMinutes
+      .filter(item => item.name.trim())
+      .map(({ file, ...metadata }) => {
+        if (file) {
+          return { ...metadata, newPDFName: file.name };
+        }
+        return metadata;
+      });
+    formData.set('ddcMinutes', JSON.stringify(ddcData));
+    ddcMinutes.forEach(item => {
+      if (item.file) {
+        formData.append('ddcMinutePDFs', item.file, item.name);
+      }
+    });
+
+    // BOS Minutes handling
+    const bosData = bosMinutes
+      .filter(item => item.name.trim())
+      .map(({ file, ...metadata }) => {
+        if (file) {
+          return { ...metadata, newPDFName: file.name };
+        }
+        return metadata;
+      });
+    formData.set('bosMinutes', JSON.stringify(bosData));
+    bosMinutes.forEach(item => {
+      if (item.file) {
+        formData.append('bosMinutePDFs', item.file, item.name);
+      }
+    });
+
     // Finally, submit the fully prepared FormData object
     onFormSubmit(formData);
 };
@@ -2174,6 +2267,36 @@ const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
           return {
             ...item,
             TALImages: file ? { ...item.TALImages, url: URL.createObjectURL(file) } : { url: '', key: '', contentType: '' },
+            file: file || undefined,
+          };
+        }
+        return item;
+      })
+    );
+  };
+
+  const handleDDCPDFChange = (index: number, file: File | null) => {
+    setDdcMinutes(prevDDC =>
+      prevDDC.map((item, i) => {
+        if (i === index) {
+          return {
+            ...item,
+            pdf: file ? { ...item.pdf, url: URL.createObjectURL(file) } : { url: '', key: '', contentType: '' },
+            file: file || undefined,
+          };
+        }
+        return item;
+      })
+    );
+  };
+
+  const handleBOSPDFChange = (index: number, file: File | null) => {
+    setBosMinutes(prevBOS =>
+      prevBOS.map((item, i) => {
+        if (i === index) {
+          return {
+            ...item,
+            pdf: file ? { ...item.pdf, url: URL.createObjectURL(file) } : { url: '', key: '', contentType: '' },
             file: file || undefined,
           };
         }
@@ -2429,6 +2552,72 @@ const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         </button>
       </div>  
 
+      <h3>DDC Minutes</h3>
+      <div style={styles.formGroup}>
+        {ddcMinutes.map((item, index) => (
+          <div key={index} style={{...styles.section, marginBottom: '20px'}}>
+            <div style={styles.formGroup}>
+              <label style={styles.label}>Minute Name</label>
+              <input 
+                value={item.name}
+                onChange={(e) => handleArrayChange(setDdcMinutes, ddcMinutes, index, 'name', e.target.value)}
+                style={styles.input}
+                placeholder="Enter DDC minute name..."
+              />
+            </div>
+            <div style={{flex: 1}}>
+              <PDFUpload 
+                label="PDF File"
+                name={`ddcPDF-${index}`}
+                initialPDF={item.pdf?.url}
+                onChange={(file) => handleDDCPDFChange(index, file)}
+              />
+            </div>
+            {ddcMinutes.length > 1 && (
+              <button type="button" onClick={() => removeArrayItem(setDdcMinutes, ddcMinutes, index)} style={styles.removeSectionButton}>
+                  Remove DDC Minute
+              </button>
+            )}
+          </div>
+        ))}
+        <button type="button" onClick={() => addArrayItem(setDdcMinutes, { name: '', pdf: { url: '', key: '', contentType: '' } })} style={styles.addButton}>
+          Add DDC Minute
+        </button>
+      </div>
+
+      <h3>BOS Minutes</h3>
+      <div style={styles.formGroup}>
+        {bosMinutes.map((item, index) => (
+          <div key={index} style={{...styles.section, marginBottom: '20px'}}>
+            <div style={styles.formGroup}>
+              <label style={styles.label}>Minute Name</label>
+              <input 
+                value={item.name}
+                onChange={(e) => handleArrayChange(setBosMinutes, bosMinutes, index, 'name', e.target.value)}
+                style={styles.input}
+                placeholder="Enter BOS minute name..."
+              />
+            </div>
+            <div style={{flex: 1}}>
+              <PDFUpload 
+                label="PDF File"
+                name={`bosPDF-${index}`}
+                initialPDF={item.pdf?.url}
+                onChange={(file) => handleBOSPDFChange(index, file)}
+              />
+            </div>
+            {bosMinutes.length > 1 && (
+              <button type="button" onClick={() => removeArrayItem(setBosMinutes, bosMinutes, index)} style={styles.removeSectionButton}>
+                  Remove BOS Minute
+              </button>
+            )}
+          </div>
+        ))}
+        <button type="button" onClick={() => addArrayItem(setBosMinutes, { name: '', pdf: { url: '', key: '', contentType: '' } })} style={styles.addButton}>
+          Add BOS Minute
+        </button>
+      </div>
+
 
       <h3>Faculty Members</h3>
       <div style={styles.formGroup}>
@@ -2566,7 +2755,7 @@ const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
             </div>
           </div>
         ))}
-        <button type="button" onClick={() => addArrayItem(setPlacementStats, { overallPlacementPercentage: '', highestPackage: '', averagePackage: '' })} style={styles.addButton}>
+        <button type="button" onClick={() => addArrayItem(setPlacementStats, { overallPlacementPercentage: '', highestPackage: '', averagePackage: '', recruiters: [''] })} style={styles.addButton}>
           Add Placement Stat Section
         </button>
       </div>

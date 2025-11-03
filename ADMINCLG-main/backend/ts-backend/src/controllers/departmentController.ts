@@ -966,6 +966,68 @@ export const createDepartment = async (req: Request, res: Response) => {
       })
     );
 
+    // ===== Upload DDC Minute PDFs =====
+    const ddcMinutePDFFiles = files.filter((f) => f.fieldname === "ddcMinutePDFs");
+    const ddcMinuteNames = req.body.ddcMinuteNames
+      ? Array.isArray(req.body.ddcMinuteNames)
+        ? req.body.ddcMinuteNames
+        : [req.body.ddcMinuteNames]
+      : [];
+
+    const ddcMinutes = await Promise.all(
+      ddcMinutePDFFiles.map(async (file, index) => {
+        const ddcKey = `department/ddcMinutes/${uuidv4()}-${file.originalname.replace(/\s+/g, "_")}`;
+        await s3.send(
+          new PutObjectCommand({
+            Bucket: process.env.SPACES_BUCKET!,
+            Key: ddcKey,
+            Body: file.buffer,
+            ACL: "public-read",
+            ContentType: file.mimetype,
+          })
+        );
+        return {
+          name: ddcMinuteNames[index] || file.originalname,
+          pdf: {
+            url: `${process.env.SPACES_ENDPOINT}/${process.env.SPACES_BUCKET}/${ddcKey}`,
+            key: ddcKey,
+            contentType: file.mimetype,
+          },
+        };
+      })
+    );
+
+    // ===== Upload BOS Minute PDFs =====
+    const bosMinutePDFFiles = files.filter((f) => f.fieldname === "bosMinutePDFs");
+    const bosMinuteNames = req.body.bosMinuteNames
+      ? Array.isArray(req.body.bosMinuteNames)
+        ? req.body.bosMinuteNames
+        : [req.body.bosMinuteNames]
+      : [];
+
+    const bosMinutes = await Promise.all(
+      bosMinutePDFFiles.map(async (file, index) => {
+        const bosKey = `department/bosMinutes/${uuidv4()}-${file.originalname.replace(/\s+/g, "_")}`;
+        await s3.send(
+          new PutObjectCommand({
+            Bucket: process.env.SPACES_BUCKET!,
+            Key: bosKey,
+            Body: file.buffer,
+            ACL: "public-read",
+            ContentType: file.mimetype,
+          })
+        );
+        return {
+          name: bosMinuteNames[index] || file.originalname,
+          pdf: {
+            url: `${process.env.SPACES_ENDPOINT}/${process.env.SPACES_BUCKET}/${bosKey}`,
+            key: bosKey,
+            contentType: file.mimetype,
+          },
+        };
+      })
+    );
+
     // //upload teaching and learning images
     // // ✅ NEW: Correctly filter for TALImages
     // const TALImageFiles = files.filter((f) => f.fieldname === "TALImages");
@@ -1104,6 +1166,8 @@ export const createDepartment = async (req: Request, res: Response) => {
       studentAwards: parsedData.studentAwards,
       certifications: parsedData.certifications,
       clubs,
+      ddcMinutes,
+      bosMinutes,
       research: parsedData.research,
       contact: parsedData.contact,
     });
@@ -1393,6 +1457,76 @@ export const updateDepartmentByCode = async (req: Request, res: Response) => {
           }
           
           return { ...club, image: imagePayload };
+        })
+      );
+    }
+
+    // --- 5. Synchronize DDC Minutes ---
+    if (req.body.ddcMinutes) {
+      const incomingDDCMinutes = JSON.parse(req.body.ddcMinutes);
+      const ddcMinutePDFFiles = files.filter(f => f.fieldname === "ddcMinutePDFs");
+      const ddcMinutePDFMap = new Map(ddcMinutePDFFiles.map(file => [file.originalname, file]));
+
+      // Identify and delete DDC minutes & PDFs that were removed
+      const incomingDDCIds = incomingDDCMinutes.map((ddc: any) => ddc._id).filter(Boolean);
+      for (const existingDDC of department.ddcMinutes) {
+        if (!incomingDDCIds.includes(existingDDC._id.toString())) {
+          if (existingDDC.pdf?.key) {
+            await deleteFileFromS3(existingDDC.pdf.key);
+          }
+        }
+      }
+
+      // Process incoming DDC minutes to update/create
+      department.ddcMinutes = await Promise.all(
+        incomingDDCMinutes.map(async (ddc: any) => {
+          const newPDFFile = ddcMinutePDFMap.get(ddc.name);
+          let pdfPayload = ddc.pdf; // Default to existing PDF
+
+          if (newPDFFile) {
+            // If there's a new file, delete the old PDF if it exists
+            if (ddc.pdf?.key) {
+              await deleteFileFromS3(ddc.pdf.key);
+            }
+            pdfPayload = await uploadFileToS3(newPDFFile, "department/ddcMinutes");
+          }
+
+          return { ...ddc, pdf: pdfPayload };
+        })
+      );
+    }
+
+    // --- 6. Synchronize BOS Minutes ---
+    if (req.body.bosMinutes) {
+      const incomingBOSMinutes = JSON.parse(req.body.bosMinutes);
+      const bosMinutePDFFiles = files.filter(f => f.fieldname === "bosMinutePDFs");
+      const bosMinutePDFMap = new Map(bosMinutePDFFiles.map(file => [file.originalname, file]));
+
+      // Identify and delete BOS minutes & PDFs that were removed
+      const incomingBOSIds = incomingBOSMinutes.map((bos: any) => bos._id).filter(Boolean);
+      for (const existingBOS of department.bosMinutes) {
+        if (!incomingBOSIds.includes(existingBOS._id.toString())) {
+          if (existingBOS.pdf?.key) {
+            await deleteFileFromS3(existingBOS.pdf.key);
+          }
+        }
+      }
+
+      // Process incoming BOS minutes to update/create
+      department.bosMinutes = await Promise.all(
+        incomingBOSMinutes.map(async (bos: any) => {
+          const newPDFFile = bosMinutePDFMap.get(bos.name);
+          let pdfPayload = bos.pdf; // Default to existing PDF
+
+          if (newPDFFile) {
+            // If there's a new file, delete the old PDF if it exists
+            if (bos.pdf?.key) {
+              await deleteFileFromS3(bos.pdf.key);
+            }
+            pdfPayload = await uploadFileToS3(newPDFFile, "department/bosMinutes");
+          }
+
+          return { ...bos, pdf: pdfPayload };
         })
       );
     }
@@ -1690,12 +1824,27 @@ export const deleteDepartment = async (req: Request, res: Response) => {
     department.labs?.forEach((lab: any) => { if (lab.image?.key) deleteKeys.push(lab.image.key); });
     department.clubs?.forEach((club: any) => { if (club.image?.key) deleteKeys.push(club.image.key); });
 
-    // ✅ NEW: Add logic to collect keys from teachingAndLearning
+    // ✅ Add logic to collect keys from teachingAndLearning
     department.teachingAndLearning?.forEach((tal: any) => {
       if (tal.TALImages?.key) {
         deleteKeys.push(tal.TALImages.key);
       }
     });
+
+    // ✅ Add logic to collect keys from DDC Minutes
+    department.ddcMinutes?.forEach((ddc: any) => {
+      if (ddc.pdf?.key) {
+        deleteKeys.push(ddc.pdf.key);
+      }
+    });
+
+    // ✅ Add logic to collect keys from BOS Minutes
+    department.bosMinutes?.forEach((bos: any) => {
+      if (bos.pdf?.key) {
+        deleteKeys.push(bos.pdf.key);
+      }
+    });
+
 
     // Delete all collected keys from S3
     for (const key of deleteKeys) {

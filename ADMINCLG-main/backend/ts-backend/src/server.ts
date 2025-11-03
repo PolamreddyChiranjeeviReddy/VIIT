@@ -77,6 +77,7 @@ import dotenv from 'dotenv';
 // import path from 'path';
 import departmentRoutes from './routes/departmentRoute';
 import userRoute from './routes/userRoute';
+import hostelUserRoute from './routes/hostelUserRoute';
 import newsEventsRoute from './routes/newsEventsRoute';
 import heroImageRoute from './routes/heroImageRoute';
 import announcementRoute from './routes/announcementRoute';
@@ -118,6 +119,7 @@ app.use(express.urlencoded({ extended: true }));
 // Routes
 app.use('/api/department', departmentRoutes);
 app.use('/api/user',userRoute);
+app.use('/api/hostelUser',hostelUserRoute);
 app.use('/api/newsEvents',newsEventsRoute);
 app.use('/api/heroImage',heroImageRoute);
 // app.use("/images",express.static('uploads'));

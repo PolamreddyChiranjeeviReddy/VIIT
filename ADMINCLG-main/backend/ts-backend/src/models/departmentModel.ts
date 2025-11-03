@@ -192,6 +192,24 @@ interface clubs{
   studentCoordinator: string;
 }
 
+interface DDCMinute {
+  name: string;
+  pdf: {
+    url: string;
+    key: string;
+    contentType: string;
+  };
+}
+
+interface BOSMinute {
+  name: string;
+  pdf: {
+    url: string;
+    key: string;
+    contentType: string;
+  };
+}
+
 interface research{
   sno: number;
   patentTitle: string;
@@ -243,6 +261,8 @@ export interface DepartmentDocument extends Document {
   studentAwards: StudentAwards[];
   certifications: Certifications[];
   clubs: clubs[];
+  ddcMinutes: DDCMinute[];
+  bosMinutes: BOSMinute[];
   research: research[];
   contact: contact;
 }
@@ -327,6 +347,24 @@ const ClubsSchema: Schema = new Schema({
   studentCoordinator: { type: String, required: false },
 });
 
+const DDCMinuteSchema: Schema = new Schema({
+  name: { type: String, required: false },
+  pdf: {
+    url: { type: String, required: false },
+    key: { type: String, required: false },
+    contentType: { type: String, required: false }
+  },
+});
+
+const BOSMinuteSchema: Schema = new Schema({
+  name: { type: String, required: false },
+  pdf: {
+    url: { type: String, required: false },
+    key: { type: String, required: false },
+    contentType: { type: String, required: false }
+  },
+});
+
 const ResearchSchema: Schema = new Schema({
   sno: { type: Number },
   patentTitle: { type: String },
@@ -375,6 +413,8 @@ const DepartmentSchema: Schema = new Schema({
   studentAwards: { type: [StudentAwardsSchema], required: false  },
   certifications: { type: [CertificationsSchema], required: false  },
   clubs: { type: [ClubsSchema], required: false  },
+  ddcMinutes: { type: [DDCMinuteSchema], required: false  },
+  bosMinutes: { type: [BOSMinuteSchema], required: false  },
   research: { type: [ResearchSchema], required: false  },
   contact: { type: ContactSchema, required: false  },
 });
