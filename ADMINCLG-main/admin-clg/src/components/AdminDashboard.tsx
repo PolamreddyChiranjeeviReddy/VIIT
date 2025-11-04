@@ -1748,6 +1748,7 @@ interface TeachingAndLearning {
 }
 interface DDCMinute { name: string; pdf: ImageFile; file?: File; }
 interface BOSMinute { name: string; pdf: ImageFile; file?: File; }
+interface BOSMember { BosMemberName: string; Designation: string; memberStatus: string; }
 interface EventOrganized { title: string; description: string; }
 interface SponsoredProject { principalInvestigator: string; researchProjectName: string; fundingAgency: string; }
 interface FacultyAward { sno: number; name: string; count: number; }
@@ -1775,6 +1776,8 @@ interface Department {
   teachingAndLearning: TeachingAndLearning[];
   ddcMinutes: DDCMinute[];
   bosMinutes: BOSMinute[];
+  bosMinutesMembers: BOSMember[];
+  PAQIC?: string;
   faculty: FacultyMember[]; 
   placementStats: PlacementStat[];
   recruiters: RecruiterImage[];
@@ -1817,6 +1820,8 @@ const DepartmentForm = ({ onFormSubmit, initialData, onCancel }: DepartmentFormP
   const [teachingAndLearning, setTeachingAndLearning] = useState<TeachingAndLearning[]>([{ TALDescription: '', TALImages: { url: '', key: '', contentType: '' } }]);
   const [ddcMinutes, setDdcMinutes] = useState<DDCMinute[]>([{ name: '', pdf: { url: '', key: '', contentType: '' } }]);
   const [bosMinutes, setBosMinutes] = useState<BOSMinute[]>([{ name: '', pdf: { url: '', key: '', contentType: '' } }]);
+  const [bosMinutesMembers, setBosMinutesMembers] = useState<BOSMember[]>([{ BosMemberName: '', Designation: '', memberStatus: '' }]);
+  const [PAQIC, setPAQIC] = useState<string>('');
   const [faculty, setFaculty] = useState<FacultyMember[]>([{ sno: 1, name: '', designation: '' }]);
   const [recruiters, setRecruiters] = useState<RecruiterImage[]>([]);
   const [placementStats, setPlacementStats] = useState<PlacementStat[]>([{ overallPlacementPercentage: '', highestPackage: '', averagePackage: '', recruiters: [''] }]);
@@ -1850,7 +1855,9 @@ const DepartmentForm = ({ onFormSubmit, initialData, onCancel }: DepartmentFormP
       // ✅ ADD THIS LINE to populate the new state
       setTeachingAndLearning(initialData.teachingAndLearning?.length > 0 ? initialData.teachingAndLearning.map(tal => ({...tal, TALImages: tal.TALImages || {url:'', key:'', contentType:''}})) : [{ TALDescription: '', TALImages: { url: '', key: '', contentType: '' } }]);
       setDdcMinutes(initialData.ddcMinutes?.length > 0 ? initialData.ddcMinutes.map(ddc => ({...ddc, pdf: ddc.pdf || {url:'', key:'', contentType:''}})) : [{ name: '', pdf: { url: '', key: '', contentType: '' } }]);
-      setBosMinutes(initialData.bosMinutes?.length > 0 ? initialData.bosMinutes.map(bos => ({...bos, pdf: bos.pdf || {url:'', key:'', contentType:''}})) : [{ name: '', pdf: { url: '', key: '', contentType: '' } }]);
+  setBosMinutes(initialData.bosMinutes?.length > 0 ? initialData.bosMinutes.map(bos => ({...bos, pdf: bos.pdf || {url:'', key:'', contentType:''}})) : [{ name: '', pdf: { url: '', key: '', contentType: '' } }]);
+  setBosMinutesMembers(initialData.bosMinutesMembers?.length > 0 ? initialData.bosMinutesMembers : [{ BosMemberName: '', Designation: '', memberStatus: '' }]);
+  setPAQIC(initialData.PAQIC || '');
       setFaculty(initialData.faculty && initialData.faculty.length > 0 ? initialData.faculty : [{ sno: 1, name: '', designation: '' }]);
       setPlacementStats(initialData.placementStats?.length > 0 ? initialData.placementStats : [{ overallPlacementPercentage: '', highestPackage: '', averagePackage: '', recruiters: [''] }]);
             setRecruiters(initialData.recruiters || []);
@@ -1871,7 +1878,9 @@ const DepartmentForm = ({ onFormSubmit, initialData, onCancel }: DepartmentFormP
       setPsos(['']);
       setTeachingAndLearning([{ TALDescription: '', TALImages: { url: '', key: '', contentType: '' } }]);
       setDdcMinutes([{ name: '', pdf: { url: '', key: '', contentType: '' } }]);
-      setBosMinutes([{ name: '', pdf: { url: '', key: '', contentType: '' } }]);
+  setBosMinutes([{ name: '', pdf: { url: '', key: '', contentType: '' } }]);
+  setBosMinutesMembers([{ BosMemberName: '', Designation: '', memberStatus: '' }]);
+  setPAQIC('');
       setFaculty([{ sno: 1, name: '', designation: '' }]);
       setPlacementStats([{ overallPlacementPercentage: '', highestPackage: '', averagePackage: '', recruiters: [''] }]);
       setRecruiters([]);
@@ -1985,6 +1994,10 @@ const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     formData.set('peos', JSON.stringify(peos.filter(p => p.trim())));
     formData.set('pos', JSON.stringify(pos.filter(p => p.trim())));
     formData.set('psos', JSON.stringify(psos.filter(p => p.trim())));
+    // PAQIC (single string)
+    if (PAQIC && PAQIC.trim()) {
+      formData.set('PAQIC', PAQIC.trim());
+    }
     formData.set('faculty', JSON.stringify(faculty.filter(f => f.name.trim() && f.designation.trim())));
     formData.set('careerSupport', JSON.stringify(careerSupport.filter(p => p.trim())));
     formData.set('eventsOrganized', JSON.stringify(eventsOrganized.filter(e => e.title.trim() || e.description.trim())));
@@ -2107,6 +2120,13 @@ const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     });
 
     // BOS Minutes handling
+    // BOS Minutes Members (metadata only)
+    const bosMembersData = bosMinutesMembers
+      .filter(m => m.BosMemberName.trim() || m.Designation.trim() || m.memberStatus.trim());
+    if (bosMembersData.length > 0) {
+      formData.set('bosMinutesMembers', JSON.stringify(bosMembersData));
+    }
+    
     const bosData = bosMinutes
       .filter(item => item.name.trim())
       .map(({ file, ...metadata }) => {
@@ -2518,6 +2538,17 @@ const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         </button>
       </div>
 
+        <div style={styles.formGroup}>
+          <label style={styles.label}>PAQIC</label>
+          <input
+            type="text"
+            value={PAQIC}
+            onChange={(e) => setPAQIC(e.target.value)}
+            style={styles.input}
+            placeholder="Enter PAQIC"
+          />
+        </div>
+
 
       <h3>Teaching & Learning</h3>
       <div style={styles.formGroup}>
@@ -2582,6 +2613,51 @@ const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         ))}
         <button type="button" onClick={() => addArrayItem(setDdcMinutes, { name: '', pdf: { url: '', key: '', contentType: '' } })} style={styles.addButton}>
           Add DDC Minute
+        </button>
+      </div>
+
+      <h3>BOS Members</h3>
+      <div style={styles.formGroup}>
+        {bosMinutesMembers.map((member, index) => (
+          <div key={index} style={{...styles.section, marginBottom: '12px'}}>
+            <div style={styles.formRow}>
+              <div style={{...styles.formGroup, flex: 2, marginRight: '10px'}}>
+                <label style={styles.label}>Member Name</label>
+                <input
+                  value={member.BosMemberName}
+                  onChange={(e) => handleArrayChange(setBosMinutesMembers, bosMinutesMembers, index, 'BosMemberName', e.target.value)}
+                  style={styles.input}
+                  placeholder="Enter member name"
+                />
+              </div>
+              <div style={{...styles.formGroup, flex: 2, marginRight: '10px'}}>
+                <label style={styles.label}>Designation</label>
+                <input
+                  value={member.Designation}
+                  onChange={(e) => handleArrayChange(setBosMinutesMembers, bosMinutesMembers, index, 'Designation', e.target.value)}
+                  style={styles.input}
+                  placeholder="Enter designation"
+                />
+              </div>
+              <div style={{...styles.formGroup, flex: 1}}>
+                <label style={styles.label}>Member Status</label>
+                <input
+                  value={member.memberStatus}
+                  onChange={(e) => handleArrayChange(setBosMinutesMembers, bosMinutesMembers, index, 'memberStatus', e.target.value)}
+                  style={styles.input}
+                  placeholder="Enter member status"
+                />
+              </div>
+            </div>
+            {bosMinutesMembers.length > 1 && (
+              <button type="button" onClick={() => removeArrayItem(setBosMinutesMembers, bosMinutesMembers, index)} style={styles.removeSectionButton}>
+                Remove Member
+              </button>
+            )}
+          </div>
+        ))}
+        <button type="button" onClick={() => addArrayItem(setBosMinutesMembers, { BosMemberName: '', Designation: '', memberStatus: '' })} style={styles.addButton}>
+          Add BOS Member
         </button>
       </div>
 

@@ -210,6 +210,12 @@ interface BOSMinute {
   };
 }
 
+interface BOSMember {
+  BosMemberName: string;
+  Designation: string;
+  memberStatus: string;
+}
+
 interface research{
   sno: number;
   patentTitle: string;
@@ -263,6 +269,8 @@ export interface DepartmentDocument extends Document {
   clubs: clubs[];
   ddcMinutes: DDCMinute[];
   bosMinutes: BOSMinute[];
+  bosMinutesMembers: BOSMember[];
+  PAQIC?: string;
   research: research[];
   contact: contact;
 }
@@ -414,7 +422,9 @@ const DepartmentSchema: Schema = new Schema({
   certifications: { type: [CertificationsSchema], required: false  },
   clubs: { type: [ClubsSchema], required: false  },
   ddcMinutes: { type: [DDCMinuteSchema], required: false  },
+  bosMinutesMembers: { type: [{ BosMemberName: String, Designation: String, memberStatus: String }], required: false },
   bosMinutes: { type: [BOSMinuteSchema], required: false  },
+  PAQIC: { type: String, required: false },
   research: { type: [ResearchSchema], required: false  },
   contact: { type: ContactSchema, required: false  },
 });

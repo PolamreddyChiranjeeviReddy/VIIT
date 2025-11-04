@@ -1143,6 +1143,15 @@ export const createDepartment = async (req: Request, res: Response) => {
       contact: typeof contact === "string" ? JSON.parse(contact) : contact,
     };
 
+    // Additional fields
+    const bosMinutesMembers = req.body.bosMinutesMembers
+      ? typeof req.body.bosMinutesMembers === 'string'
+        ? JSON.parse(req.body.bosMinutesMembers)
+        : req.body.bosMinutesMembers
+      : [];
+
+    const PAQIC = req.body.PAQIC || "";
+
     // ===== Create Department =====
     const department = new departmentModel({
       code,
@@ -1171,6 +1180,8 @@ export const createDepartment = async (req: Request, res: Response) => {
       clubs,
       ddcMinutes,
       bosMinutes,
+      bosMinutesMembers,
+      PAQIC,
       research: parsedData.research,
       contact: parsedData.contact,
     });
@@ -1352,6 +1363,7 @@ export const updateDepartmentByCode = async (req: Request, res: Response) => {
     const fieldsToUpdate = [
       'code', 'name', 'about', 'hodName', 'hodMessage', 'vision', 'mission',
       'peos', 'pos', 'psos', 'faculty', 'placementStats', 'careerSupport',
+      'bosMinutesMembers', 'PAQIC',
       'eventsOrganized', 'sponsoredProjects', 'facultyAwards', 'studentAwards',
       'certifications', 'research', 'contact'
     ];
@@ -1360,7 +1372,7 @@ export const updateDepartmentByCode = async (req: Request, res: Response) => {
       if (req.body[field]) {
         try {
             // Check if it's a field that needs parsing
-            if (['mission', 'peos', 'pos', 'psos', 'faculty', 'placementStats', 'careerSupport', 'eventsOrganized', 'sponsoredProjects', 'facultyAwards', 'studentAwards', 'certifications', 'research', 'contact'].includes(field)) {
+      if (['mission', 'peos', 'pos', 'psos', 'faculty', 'placementStats', 'careerSupport', 'eventsOrganized', 'sponsoredProjects', 'facultyAwards', 'studentAwards', 'certifications', 'research', 'contact', 'bosMinutesMembers'].includes(field)) {
                  (department as any)[field] = JSON.parse(req.body[field]);
             } else {
                  (department as any)[field] = req.body[field];
