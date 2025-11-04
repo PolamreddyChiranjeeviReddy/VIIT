@@ -516,6 +516,7 @@ export const getDepartment = async (_req: Request, res: Response) => {
     if (!department || department.length === 0) {
       return res.status(500).json({ error: "Department not found" });
     }
+    // Return documents as-is (no URL rewriting)
     res.status(200).json(department);
   } catch (err:any) {
     res.status(500).json({ error: "Error fetching department" });
@@ -634,6 +635,7 @@ export const getDepartmentByCode = async (_req: Request, res: Response) => {
     if (!department || department.length === 0) {
       return res.status(500).json({ error: "Department not found" });
     }
+    // Return documents as-is (no URL rewriting)
     res.status(200).json(department);
   }
   catch (err:any) {
@@ -851,7 +853,8 @@ export const createDepartment = async (req: Request, res: Response) => {
       })
     );
     const heroImage = {
-      url: `${process.env.SPACES_ENDPOINT}/${process.env.SPACES_BUCKET}/${heroKey}`,
+  // CDN configured to serve without the bucket path (root at the custom domain)
+  url: `${process.env.CDN_DOMAIN || 'https://files.vignaniit.edu.in'}/${heroKey}`,
       key: heroKey,
       contentType: heroImageFile.mimetype,
     };
@@ -868,7 +871,7 @@ export const createDepartment = async (req: Request, res: Response) => {
       })
     );
     const hodImage = {
-      url: `${process.env.SPACES_ENDPOINT}/${process.env.SPACES_BUCKET}/${hodKey}`,
+  url: `${process.env.CDN_DOMAIN || 'https://files.vignaniit.edu.in'}/${hodKey}`,
       key: hodKey,
       contentType: hodImageFile.mimetype,
     };
@@ -887,7 +890,7 @@ export const createDepartment = async (req: Request, res: Response) => {
           })
         );
         return {
-          url: `${process.env.SPACES_ENDPOINT}/${process.env.SPACES_BUCKET}/${recruiterKey}`,
+          url: `${process.env.CDN_DOMAIN || 'https://files.vignaniit.edu.in'}/${recruiterKey}`,
           key: recruiterKey,
           contentType: file.mimetype,
         };
@@ -915,8 +918,8 @@ export const createDepartment = async (req: Request, res: Response) => {
         );
         return {
           name: labNames[index] || file.originalname,
-          image: {
-            url: `${process.env.SPACES_ENDPOINT}/${process.env.SPACES_BUCKET}/${labKey}`,
+            image: {
+            url: `${process.env.CDN_DOMAIN || 'https://files.vignaniit.edu.in'}/${labKey}`,
             key: labKey,
             contentType: file.mimetype,
           },
@@ -957,8 +960,8 @@ export const createDepartment = async (req: Request, res: Response) => {
           clubName: clubNames[index] || "",
           description: clubDescriptions[index] || "",
           studentCoordinator: clubCoordinators[index] || "",
-          image: {
-            url: `${process.env.SPACES_ENDPOINT}/${process.env.SPACES_BUCKET}/${clubKey}`,
+            image: {
+            url: `${process.env.CDN_DOMAIN || 'https://files.vignaniit.edu.in'}/${clubKey}`,
             key: clubKey,
             contentType: file.mimetype,
           },
@@ -989,7 +992,7 @@ export const createDepartment = async (req: Request, res: Response) => {
         return {
           name: ddcMinuteNames[index] || file.originalname,
           pdf: {
-            url: `${process.env.SPACES_ENDPOINT}/${process.env.SPACES_BUCKET}/${ddcKey}`,
+            url: `${process.env.CDN_DOMAIN || 'https://files.vignaniit.edu.in'}/${ddcKey}`,
             key: ddcKey,
             contentType: file.mimetype,
           },
@@ -1020,7 +1023,7 @@ export const createDepartment = async (req: Request, res: Response) => {
         return {
           name: bosMinuteNames[index] || file.originalname,
           pdf: {
-            url: `${process.env.SPACES_ENDPOINT}/${process.env.SPACES_BUCKET}/${bosKey}`,
+            url: `${process.env.CDN_DOMAIN || 'https://files.vignaniit.edu.in'}/${bosKey}`,
             key: bosKey,
             contentType: file.mimetype,
           },
@@ -1078,7 +1081,7 @@ export const createDepartment = async (req: Request, res: Response) => {
   );
 
   return {
-    url: `${process.env.SPACES_ENDPOINT}/${process.env.SPACES_BUCKET}/${key}`,
+  url: `${process.env.CDN_DOMAIN || 'https://files.vignaniit.edu.in'}/${key}`,
     key: key,
     contentType: file.mimetype,
   };
@@ -1314,7 +1317,7 @@ const uploadFileToS3 = async (file: Express.Multer.File, path: string): Promise<
   );
 
   return {
-    url: `${process.env.SPACES_ENDPOINT}/${process.env.SPACES_BUCKET}/${key}`,
+  url: `${process.env.CDN_DOMAIN || 'https://files.vignaniit.edu.in'}/${key}`,
     key: key,
     contentType: file.mimetype,
   };

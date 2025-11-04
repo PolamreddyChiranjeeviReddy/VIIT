@@ -82,6 +82,8 @@ import newsEventsRoute from './routes/newsEventsRoute';
 import heroImageRoute from './routes/heroImageRoute';
 import announcementRoute from './routes/announcementRoute';
 import placementRoute from './routes/placementRoute';
+import { s3 } from './config/spaces';
+import { HeadObjectCommand, GetObjectAclCommand } from '@aws-sdk/client-s3';
 
 dotenv.config();
 const app = express();
@@ -134,3 +136,27 @@ mongoose.connect(process.env.MONGO_URI || '')
     app.listen(5000, () => console.log('Server running on port 5000'));
   })
   .catch(err => console.error('MongoDB connection error:', err));
+
+// ---- DEBUG ROUTES (development only) ----
+// Returns head info and ACL for a given object key in the Spaces bucket.
+// Usage: GET /debug/object-status?key=department/bosMinutes/your-key.pdf&bucket=vignan
+app.get('/debug/object-status', async (req, res) => {
+  const key = String(req.query.key || "");
+  const bucket = String(req.query.bucket || process.env.SPACES_BUCKET || "");
+  if (!key) return res.status(400).json({ error: 'key query param required' });
+  if (!bucket) return res.status(400).json({ error: 'bucket not provided and SPACES_BUCKET missing' });
+  try {
+    const head = await s3.send(new HeadObjectCommand({ Bucket: bucket, Key: key }));
+    let acl: any = null;
+    try {
+      acl = await s3.send(new GetObjectAclCommand({ Bucket: bucket, Key: key }));
+    } catch (e: any) {
+      // ACL may be disallowed depending on credentials; return error string
+      acl = { error: e?.name || String(e) };
+    }
+    return res.json({ exists: true, head, acl });
+  } catch (err: any) {
+    // If head fails, include the error name/message to help debugging
+    return res.status(500).json({ exists: false, error: err?.name || 'Error', message: err?.message || String(err) });
+  }
+});
