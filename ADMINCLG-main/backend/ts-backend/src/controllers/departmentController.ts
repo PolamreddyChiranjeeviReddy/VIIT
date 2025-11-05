@@ -1150,7 +1150,11 @@ export const createDepartment = async (req: Request, res: Response) => {
         : req.body.bosMinutesMembers
       : [];
 
-    const PAQIC = req.body.PAQIC || "";
+    const PAQIC = req.body.PAQIC
+      ? typeof req.body.PAQIC === 'string'
+        ? JSON.parse(req.body.PAQIC)
+        : req.body.PAQIC
+      : [];
 
     // ===== Create Department =====
     const department = new departmentModel({
@@ -1372,7 +1376,7 @@ export const updateDepartmentByCode = async (req: Request, res: Response) => {
       if (req.body[field]) {
         try {
             // Check if it's a field that needs parsing
-      if (['mission', 'peos', 'pos', 'psos', 'faculty', 'placementStats', 'careerSupport', 'eventsOrganized', 'sponsoredProjects', 'facultyAwards', 'studentAwards', 'certifications', 'research', 'contact', 'bosMinutesMembers'].includes(field)) {
+      if (['mission', 'peos', 'pos', 'psos', 'PAQIC', 'faculty', 'placementStats', 'careerSupport', 'eventsOrganized', 'sponsoredProjects', 'facultyAwards', 'studentAwards', 'certifications', 'research', 'contact', 'bosMinutesMembers'].includes(field)) {
                  (department as any)[field] = JSON.parse(req.body[field]);
             } else {
                  (department as any)[field] = req.body[field];

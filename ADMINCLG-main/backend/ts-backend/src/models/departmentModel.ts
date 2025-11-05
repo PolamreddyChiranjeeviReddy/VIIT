@@ -270,7 +270,7 @@ export interface DepartmentDocument extends Document {
   ddcMinutes: DDCMinute[];
   bosMinutes: BOSMinute[];
   bosMinutesMembers: BOSMember[];
-  PAQIC?: string;
+  PAQIC?: string[];
   research: research[];
   contact: contact;
 }
@@ -424,7 +424,7 @@ const DepartmentSchema: Schema = new Schema({
   ddcMinutes: { type: [DDCMinuteSchema], required: false  },
   bosMinutesMembers: { type: [{ BosMemberName: String, Designation: String, memberStatus: String }], required: false },
   bosMinutes: { type: [BOSMinuteSchema], required: false  },
-  PAQIC: { type: String, required: false },
+  PAQIC: { type: [String], required: false },
   research: { type: [ResearchSchema], required: false  },
   contact: { type: ContactSchema, required: false  },
 });

@@ -1777,7 +1777,7 @@ interface Department {
   ddcMinutes: DDCMinute[];
   bosMinutes: BOSMinute[];
   bosMinutesMembers: BOSMember[];
-  PAQIC?: string;
+  PAQIC?: string[];
   faculty: FacultyMember[]; 
   placementStats: PlacementStat[];
   recruiters: RecruiterImage[];
@@ -1821,7 +1821,7 @@ const DepartmentForm = ({ onFormSubmit, initialData, onCancel }: DepartmentFormP
   const [ddcMinutes, setDdcMinutes] = useState<DDCMinute[]>([{ name: '', pdf: { url: '', key: '', contentType: '' } }]);
   const [bosMinutes, setBosMinutes] = useState<BOSMinute[]>([{ name: '', pdf: { url: '', key: '', contentType: '' } }]);
   const [bosMinutesMembers, setBosMinutesMembers] = useState<BOSMember[]>([{ BosMemberName: '', Designation: '', memberStatus: '' }]);
-  const [PAQIC, setPAQIC] = useState<string>('');
+  const [PAQIC, setPAQIC] = useState<string[]>(['']);
   const [faculty, setFaculty] = useState<FacultyMember[]>([{ sno: 1, name: '', designation: '' }]);
   const [recruiters, setRecruiters] = useState<RecruiterImage[]>([]);
   const [placementStats, setPlacementStats] = useState<PlacementStat[]>([{ overallPlacementPercentage: '', highestPackage: '', averagePackage: '', recruiters: [''] }]);
@@ -1857,7 +1857,7 @@ const DepartmentForm = ({ onFormSubmit, initialData, onCancel }: DepartmentFormP
       setDdcMinutes(initialData.ddcMinutes?.length > 0 ? initialData.ddcMinutes.map(ddc => ({...ddc, pdf: ddc.pdf || {url:'', key:'', contentType:''}})) : [{ name: '', pdf: { url: '', key: '', contentType: '' } }]);
   setBosMinutes(initialData.bosMinutes?.length > 0 ? initialData.bosMinutes.map(bos => ({...bos, pdf: bos.pdf || {url:'', key:'', contentType:''}})) : [{ name: '', pdf: { url: '', key: '', contentType: '' } }]);
   setBosMinutesMembers(initialData.bosMinutesMembers?.length > 0 ? initialData.bosMinutesMembers : [{ BosMemberName: '', Designation: '', memberStatus: '' }]);
-  setPAQIC(initialData.PAQIC || '');
+  setPAQIC(initialData.PAQIC && initialData.PAQIC.length > 0 ? initialData.PAQIC : ['']);
       setFaculty(initialData.faculty && initialData.faculty.length > 0 ? initialData.faculty : [{ sno: 1, name: '', designation: '' }]);
       setPlacementStats(initialData.placementStats?.length > 0 ? initialData.placementStats : [{ overallPlacementPercentage: '', highestPackage: '', averagePackage: '', recruiters: [''] }]);
             setRecruiters(initialData.recruiters || []);
@@ -1880,7 +1880,7 @@ const DepartmentForm = ({ onFormSubmit, initialData, onCancel }: DepartmentFormP
       setDdcMinutes([{ name: '', pdf: { url: '', key: '', contentType: '' } }]);
   setBosMinutes([{ name: '', pdf: { url: '', key: '', contentType: '' } }]);
   setBosMinutesMembers([{ BosMemberName: '', Designation: '', memberStatus: '' }]);
-  setPAQIC('');
+  setPAQIC(['']);
       setFaculty([{ sno: 1, name: '', designation: '' }]);
       setPlacementStats([{ overallPlacementPercentage: '', highestPackage: '', averagePackage: '', recruiters: [''] }]);
       setRecruiters([]);
@@ -1994,9 +1994,10 @@ const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     formData.set('peos', JSON.stringify(peos.filter(p => p.trim())));
     formData.set('pos', JSON.stringify(pos.filter(p => p.trim())));
     formData.set('psos', JSON.stringify(psos.filter(p => p.trim())));
-    // PAQIC (single string)
-    if (PAQIC && PAQIC.trim()) {
-      formData.set('PAQIC', PAQIC.trim());
+    // PAQIC (array of strings)
+    const validPAQIC = PAQIC.filter(p => p.trim());
+    if (validPAQIC.length > 0) {
+      formData.set('PAQIC', JSON.stringify(validPAQIC));
     }
     formData.set('faculty', JSON.stringify(faculty.filter(f => f.name.trim() && f.designation.trim())));
     formData.set('careerSupport', JSON.stringify(careerSupport.filter(p => p.trim())));
@@ -2538,16 +2539,34 @@ const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         </button>
       </div>
 
-        <div style={styles.formGroup}>
-          <label style={styles.label}>PAQIC</label>
-          <input
-            type="text"
-            value={PAQIC}
-            onChange={(e) => setPAQIC(e.target.value)}
-            style={styles.input}
-            placeholder="Enter PAQIC"
-          />
-        </div>
+      <div style={styles.formGroup}>
+        <label style={styles.label}>PAQIC</label>
+        {PAQIC.map((point, index) => (
+          <div key={index} style={{display: 'flex', alignItems: 'center', marginBottom: '8px'}}>
+            <input 
+              value={point}
+              onChange={(e) => {
+                const newPAQIC = [...PAQIC];
+                newPAQIC[index] = e.target.value;
+                setPAQIC(newPAQIC);
+              }}
+              style={{...styles.input, flex: 1}}
+              placeholder={`PAQIC Point ${index + 1}`}
+            />
+            <button 
+              type="button"
+              onClick={() => removeArrayItem(setPAQIC, PAQIC, index)}
+              style={styles.removeButton}
+              title="Delete Point"
+            >
+              <TrashIcon />
+            </button>
+          </div>
+        ))}
+        <button type="button" onClick={() => addArrayItem(setPAQIC, '')} style={styles.addButton}>
+          Add PAQIC Point
+        </button>
+      </div>
 
 
       <h3>Teaching & Learning</h3>
