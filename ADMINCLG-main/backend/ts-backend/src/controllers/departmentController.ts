@@ -969,33 +969,50 @@ export const createDepartment = async (req: Request, res: Response) => {
       })
     );
 
+    // ===== Handle DDC Description (separate from PDFs) =====
+    const ddcDescription = req.body.ddcDescription
+      ? typeof req.body.ddcDescription === 'string'
+        ? JSON.parse(req.body.ddcDescription)
+        : req.body.ddcDescription
+      : [];
+
     // ===== Upload DDC Minute PDFs =====
     const ddcMinutePDFFiles = files.filter((f) => f.fieldname === "ddcMinutePDFs");
-    const ddcMinuteNames = req.body.ddcMinuteNames
-      ? Array.isArray(req.body.ddcMinuteNames)
-        ? req.body.ddcMinuteNames
-        : [req.body.ddcMinuteNames]
+    const ddcMinuteData = req.body.ddcMinutes
+      ? typeof req.body.ddcMinutes === 'string'
+        ? JSON.parse(req.body.ddcMinutes)
+        : req.body.ddcMinutes
       : [];
 
     const ddcMinutes = await Promise.all(
-      ddcMinutePDFFiles.map(async (file, index) => {
-        const ddcKey = `department/ddcMinutes/${uuidv4()}-${file.originalname.replace(/\s+/g, "_")}`;
-        await s3.send(
-          new PutObjectCommand({
-            Bucket: process.env.SPACES_BUCKET!,
-            Key: ddcKey,
-            Body: file.buffer,
-            ACL: "public-read",
-            ContentType: file.mimetype,
-          })
-        );
+      ddcMinuteData.map(async (ddcItem: any) => {
+        let pdfPayload = ddcItem.pdf || { url: '', key: '', contentType: '' };
+        
+        // If there's a new PDF file for this DDC minute
+        if (ddcItem.newPDFName) {
+          const file = ddcMinutePDFFiles.find((f) => f.originalname === ddcItem.newPDFName);
+          if (file) {
+            const ddcKey = `department/ddcMinutes/${uuidv4()}-${file.originalname.replace(/\s+/g, "_")}`;
+            await s3.send(
+              new PutObjectCommand({
+                Bucket: process.env.SPACES_BUCKET!,
+                Key: ddcKey,
+                Body: file.buffer,
+                ACL: "public-read",
+                ContentType: file.mimetype,
+              })
+            );
+            pdfPayload = {
+              url: `${process.env.CDN_DOMAIN || 'https://files.vignaniit.edu.in'}/${ddcKey}`,
+              key: ddcKey,
+              contentType: file.mimetype,
+            };
+          }
+        }
+        
         return {
-          name: ddcMinuteNames[index] || file.originalname,
-          pdf: {
-            url: `${process.env.CDN_DOMAIN || 'https://files.vignaniit.edu.in'}/${ddcKey}`,
-            key: ddcKey,
-            contentType: file.mimetype,
-          },
+          name: ddcItem.name || '',
+          pdf: pdfPayload,
         };
       })
     );
@@ -1150,11 +1167,53 @@ export const createDepartment = async (req: Request, res: Response) => {
         : req.body.bosMinutesMembers
       : [];
 
-    const PAQIC = req.body.PAQIC
-      ? typeof req.body.PAQIC === 'string'
-        ? JSON.parse(req.body.PAQIC)
-        : req.body.PAQIC
+    // ===== Handle PAQIC Description (separate from PDFs) =====
+    const PAQICDescription = req.body.PAQICDescription
+      ? typeof req.body.PAQICDescription === 'string'
+        ? JSON.parse(req.body.PAQICDescription)
+        : req.body.PAQICDescription
       : [];
+
+    // ===== Upload PAQIC PDFs =====
+    const paqicPDFFiles = files.filter((f) => f.fieldname === "paqicPDFs");
+    const paqicData = req.body.PAQICFiles
+      ? typeof req.body.PAQICFiles === 'string'
+        ? JSON.parse(req.body.PAQICFiles)
+        : req.body.PAQICFiles
+      : [];
+
+    const PAQICFiles = await Promise.all(
+      paqicData.map(async (paqicItem: any) => {
+        let pdfPayload = paqicItem.pdf || { url: '', key: '', contentType: '' };
+        
+        // If there's a new PDF file for this PAQIC
+        if (paqicItem.newPDFName) {
+          const file = paqicPDFFiles.find((f) => f.originalname === paqicItem.newPDFName);
+          if (file) {
+            const paqicKey = `department/paqic/${uuidv4()}-${file.originalname.replace(/\s+/g, "_")}`;
+            await s3.send(
+              new PutObjectCommand({
+                Bucket: process.env.SPACES_BUCKET!,
+                Key: paqicKey,
+                Body: file.buffer,
+                ACL: "public-read",
+                ContentType: file.mimetype,
+              })
+            );
+            pdfPayload = {
+              url: `${process.env.CDN_DOMAIN || 'https://files.vignaniit.edu.in'}/${paqicKey}`,
+              key: paqicKey,
+              contentType: file.mimetype,
+            };
+          }
+        }
+        
+        return {
+          name: paqicItem.name || '',
+          pdf: pdfPayload,
+        };
+      })
+    );
 
     // ===== Create Department =====
     const department = new departmentModel({
@@ -1183,9 +1242,11 @@ export const createDepartment = async (req: Request, res: Response) => {
       certifications: parsedData.certifications,
       clubs,
       ddcMinutes,
+      ddcDescription,
       bosMinutes,
       bosMinutesMembers,
-      PAQIC,
+      PAQICFiles,
+      PAQICDescription,
       research: parsedData.research,
       contact: parsedData.contact,
     });
@@ -1480,7 +1541,14 @@ export const updateDepartmentByCode = async (req: Request, res: Response) => {
       );
     }
 
-    // --- 5. Synchronize DDC Minutes ---
+    // --- 5. Update DDC Description (separate field) ---
+    if (req.body.ddcDescription) {
+      department.ddcDescription = typeof req.body.ddcDescription === 'string'
+        ? JSON.parse(req.body.ddcDescription)
+        : req.body.ddcDescription;
+    }
+
+    // --- 6. Synchronize DDC Minutes (PDFs only) ---
     if (req.body.ddcMinutes) {
       const incomingDDCMinutes = JSON.parse(req.body.ddcMinutes);
       const ddcMinutePDFFiles = files.filter(f => f.fieldname === "ddcMinutePDFs");
@@ -1499,18 +1567,24 @@ export const updateDepartmentByCode = async (req: Request, res: Response) => {
       // Process incoming DDC minutes to update/create
       department.ddcMinutes = await Promise.all(
         incomingDDCMinutes.map(async (ddc: any) => {
-          const newPDFFile = ddcMinutePDFMap.get(ddc.name);
-          let pdfPayload = ddc.pdf; // Default to existing PDF
+          let pdfPayload = ddc.pdf || { url: '', key: '', contentType: '' };
 
-          if (newPDFFile) {
-            // If there's a new file, delete the old PDF if it exists
-            if (ddc.pdf?.key) {
-              await deleteFileFromS3(ddc.pdf.key);
+          // Check if there's a new PDF file
+          if (ddc.newPDFName) {
+            const newPDFFile = ddcMinutePDFMap.get(ddc.newPDFName);
+            if (newPDFFile) {
+              // Delete old PDF if it exists
+              if (ddc.pdf?.key) {
+                await deleteFileFromS3(ddc.pdf.key);
+              }
+              pdfPayload = await uploadFileToS3(newPDFFile, "department/ddcMinutes");
             }
-            pdfPayload = await uploadFileToS3(newPDFFile, "department/ddcMinutes");
           }
 
-          return { ...ddc, pdf: pdfPayload };
+          return {
+            ...ddc,
+            pdf: pdfPayload
+          };
         })
       );
     }
@@ -1546,6 +1620,54 @@ export const updateDepartmentByCode = async (req: Request, res: Response) => {
           }
 
           return { ...bos, pdf: pdfPayload };
+        })
+      );
+    }
+
+    // --- 7. Update PAQIC Description (separate field) ---
+    if (req.body.PAQICDescription) {
+      department.PAQICDescription = typeof req.body.PAQICDescription === 'string'
+        ? JSON.parse(req.body.PAQICDescription)
+        : req.body.PAQICDescription;
+    }
+
+    // --- 8. Synchronize PAQIC Files (PDFs only) ---
+    if (req.body.PAQICFiles) {
+      const incomingPAQICFiles = JSON.parse(req.body.PAQICFiles);
+      const paqicPDFFiles = files.filter(f => f.fieldname === "paqicPDFs");
+      const paqicPDFMap = new Map(paqicPDFFiles.map(file => [file.originalname, file]));
+
+      // Identify and delete PAQIC PDFs that were removed
+      const incomingPAQICIds = incomingPAQICFiles.map((paqic: any) => paqic._id).filter(Boolean);
+      for (const existingPAQIC of department.PAQICFiles || []) {
+        if (!incomingPAQICIds.includes(existingPAQIC._id.toString())) {
+          if (existingPAQIC.pdf?.key) {
+            await deleteFileFromS3(existingPAQIC.pdf.key);
+          }
+        }
+      }
+
+      // Process incoming PAQIC files to update/create
+      department.PAQICFiles = await Promise.all(
+        incomingPAQICFiles.map(async (paqic: any) => {
+          let pdfPayload = paqic.pdf || { url: '', key: '', contentType: '' };
+
+          // Check if there's a new PDF file
+          if (paqic.newPDFName) {
+            const newPDFFile = paqicPDFMap.get(paqic.newPDFName);
+            if (newPDFFile) {
+              // Delete old PDF if it exists
+              if (paqic.pdf?.key) {
+                await deleteFileFromS3(paqic.pdf.key);
+              }
+              pdfPayload = await uploadFileToS3(newPDFFile, "department/paqic");
+            }
+          }
+
+          return {
+            ...paqic,
+            pdf: pdfPayload
+          };
         })
       );
     }
@@ -1864,6 +1986,12 @@ export const deleteDepartment = async (req: Request, res: Response) => {
       }
     });
 
+    // ✅ Add logic to collect keys from PAQIC Files
+    department.PAQICFiles?.forEach((paqic: any) => {
+      if (paqic.pdf?.key) {
+        deleteKeys.push(paqic.pdf.key);
+      }
+    });
 
     // Delete all collected keys from S3
     for (const key of deleteKeys) {

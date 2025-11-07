@@ -210,6 +210,15 @@ interface BOSMinute {
   };
 }
 
+interface PAQICFile {
+  name: string;
+  pdf: {
+    url: string;
+    key: string;
+    contentType: string;
+  };
+}
+
 interface BOSMember {
   BosMemberName: string;
   Designation: string;
@@ -268,9 +277,11 @@ export interface DepartmentDocument extends Document {
   certifications: Certifications[];
   clubs: clubs[];
   ddcMinutes: DDCMinute[];
+  ddcDescription: string[];
   bosMinutes: BOSMinute[];
   bosMinutesMembers: BOSMember[];
-  PAQIC?: string[];
+  PAQICFiles?: PAQICFile[];
+  PAQICDescription?: string[];
   research: research[];
   contact: contact;
 }
@@ -373,6 +384,15 @@ const BOSMinuteSchema: Schema = new Schema({
   },
 });
 
+const PAQICFileSchema: Schema = new Schema({
+  name: { type: String, required: false },
+  pdf: {
+    url: { type: String, required: false },
+    key: { type: String, required: false },
+    contentType: { type: String, required: false }
+  },
+});
+
 const ResearchSchema: Schema = new Schema({
   sno: { type: Number },
   patentTitle: { type: String },
@@ -422,9 +442,11 @@ const DepartmentSchema: Schema = new Schema({
   certifications: { type: [CertificationsSchema], required: false  },
   clubs: { type: [ClubsSchema], required: false  },
   ddcMinutes: { type: [DDCMinuteSchema], required: false  },
+  ddcDescription: { type: [String], required: false  },
   bosMinutesMembers: { type: [{ BosMemberName: String, Designation: String, memberStatus: String }], required: false },
   bosMinutes: { type: [BOSMinuteSchema], required: false  },
-  PAQIC: { type: [String], required: false },
+  PAQICFiles: { type: [PAQICFileSchema], required: false },
+  PAQICDescription: { type: [String], required: false },
   research: { type: [ResearchSchema], required: false  },
   contact: { type: ContactSchema, required: false  },
 });

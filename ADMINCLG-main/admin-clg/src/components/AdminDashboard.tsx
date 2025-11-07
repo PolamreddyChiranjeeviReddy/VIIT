@@ -1748,6 +1748,7 @@ interface TeachingAndLearning {
 }
 interface DDCMinute { name: string; pdf: ImageFile; file?: File; }
 interface BOSMinute { name: string; pdf: ImageFile; file?: File; }
+interface PAQICFile { name: string; pdf: ImageFile; file?: File; }
 interface BOSMember { BosMemberName: string; Designation: string; memberStatus: string; }
 interface EventOrganized { title: string; description: string; }
 interface SponsoredProject { principalInvestigator: string; researchProjectName: string; fundingAgency: string; }
@@ -1775,9 +1776,11 @@ interface Department {
   psos: string[];
   teachingAndLearning: TeachingAndLearning[];
   ddcMinutes: DDCMinute[];
+  ddcDescription: string[];
   bosMinutes: BOSMinute[];
   bosMinutesMembers: BOSMember[];
-  PAQIC?: string[];
+  PAQICFiles?: PAQICFile[];
+  PAQICDescription?: string[];
   faculty: FacultyMember[]; 
   placementStats: PlacementStat[];
   recruiters: RecruiterImage[];
@@ -1819,9 +1822,11 @@ const DepartmentForm = ({ onFormSubmit, initialData, onCancel }: DepartmentFormP
   const [psos, setPsos] = useState<string[]>(['']);
   const [teachingAndLearning, setTeachingAndLearning] = useState<TeachingAndLearning[]>([{ TALDescription: '', TALImages: { url: '', key: '', contentType: '' } }]);
   const [ddcMinutes, setDdcMinutes] = useState<DDCMinute[]>([{ name: '', pdf: { url: '', key: '', contentType: '' } }]);
+  const [ddcDescription, setDdcDescription] = useState<string[]>(['']);
   const [bosMinutes, setBosMinutes] = useState<BOSMinute[]>([{ name: '', pdf: { url: '', key: '', contentType: '' } }]);
   const [bosMinutesMembers, setBosMinutesMembers] = useState<BOSMember[]>([{ BosMemberName: '', Designation: '', memberStatus: '' }]);
-  const [PAQIC, setPAQIC] = useState<string[]>(['']);
+  const [PAQICFiles, setPAQICFiles] = useState<PAQICFile[]>([{ name: '', pdf: { url: '', key: '', contentType: '' } }]);
+  const [PAQICDescription, setPAQICDescription] = useState<string[]>(['']);
   const [faculty, setFaculty] = useState<FacultyMember[]>([{ sno: 1, name: '', designation: '' }]);
   const [recruiters, setRecruiters] = useState<RecruiterImage[]>([]);
   const [placementStats, setPlacementStats] = useState<PlacementStat[]>([{ overallPlacementPercentage: '', highestPackage: '', averagePackage: '', recruiters: [''] }]);
@@ -1855,9 +1860,11 @@ const DepartmentForm = ({ onFormSubmit, initialData, onCancel }: DepartmentFormP
       // ✅ ADD THIS LINE to populate the new state
       setTeachingAndLearning(initialData.teachingAndLearning?.length > 0 ? initialData.teachingAndLearning.map(tal => ({...tal, TALImages: tal.TALImages || {url:'', key:'', contentType:''}})) : [{ TALDescription: '', TALImages: { url: '', key: '', contentType: '' } }]);
       setDdcMinutes(initialData.ddcMinutes?.length > 0 ? initialData.ddcMinutes.map(ddc => ({...ddc, pdf: ddc.pdf || {url:'', key:'', contentType:''}})) : [{ name: '', pdf: { url: '', key: '', contentType: '' } }]);
+      setDdcDescription(initialData.ddcDescription && initialData.ddcDescription.length > 0 ? initialData.ddcDescription : ['']);
   setBosMinutes(initialData.bosMinutes?.length > 0 ? initialData.bosMinutes.map(bos => ({...bos, pdf: bos.pdf || {url:'', key:'', contentType:''}})) : [{ name: '', pdf: { url: '', key: '', contentType: '' } }]);
   setBosMinutesMembers(initialData.bosMinutesMembers?.length > 0 ? initialData.bosMinutesMembers : [{ BosMemberName: '', Designation: '', memberStatus: '' }]);
-  setPAQIC(initialData.PAQIC && initialData.PAQIC.length > 0 ? initialData.PAQIC : ['']);
+  setPAQICFiles(initialData.PAQICFiles && initialData.PAQICFiles.length > 0 ? initialData.PAQICFiles.map(paqic => ({...paqic, pdf: paqic.pdf || {url:'', key:'', contentType:''}})) : [{ name: '', pdf: { url: '', key: '', contentType: '' } }]);
+  setPAQICDescription(initialData.PAQICDescription && initialData.PAQICDescription.length > 0 ? initialData.PAQICDescription : ['']);
       setFaculty(initialData.faculty && initialData.faculty.length > 0 ? initialData.faculty : [{ sno: 1, name: '', designation: '' }]);
       setPlacementStats(initialData.placementStats?.length > 0 ? initialData.placementStats : [{ overallPlacementPercentage: '', highestPackage: '', averagePackage: '', recruiters: [''] }]);
             setRecruiters(initialData.recruiters || []);
@@ -1878,9 +1885,11 @@ const DepartmentForm = ({ onFormSubmit, initialData, onCancel }: DepartmentFormP
       setPsos(['']);
       setTeachingAndLearning([{ TALDescription: '', TALImages: { url: '', key: '', contentType: '' } }]);
       setDdcMinutes([{ name: '', pdf: { url: '', key: '', contentType: '' } }]);
+      setDdcDescription(['']);
   setBosMinutes([{ name: '', pdf: { url: '', key: '', contentType: '' } }]);
   setBosMinutesMembers([{ BosMemberName: '', Designation: '', memberStatus: '' }]);
-  setPAQIC(['']);
+  setPAQICFiles([{ name: '', pdf: { url: '', key: '', contentType: '' } }]);
+  setPAQICDescription(['']);
       setFaculty([{ sno: 1, name: '', designation: '' }]);
       setPlacementStats([{ overallPlacementPercentage: '', highestPackage: '', averagePackage: '', recruiters: [''] }]);
       setRecruiters([]);
@@ -1994,11 +2003,7 @@ const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     formData.set('peos', JSON.stringify(peos.filter(p => p.trim())));
     formData.set('pos', JSON.stringify(pos.filter(p => p.trim())));
     formData.set('psos', JSON.stringify(psos.filter(p => p.trim())));
-    // PAQIC (array of strings)
-    const validPAQIC = PAQIC.filter(p => p.trim());
-    if (validPAQIC.length > 0) {
-      formData.set('PAQIC', JSON.stringify(validPAQIC));
-    }
+    
     formData.set('faculty', JSON.stringify(faculty.filter(f => f.name.trim() && f.designation.trim())));
     formData.set('careerSupport', JSON.stringify(careerSupport.filter(p => p.trim())));
     formData.set('eventsOrganized', JSON.stringify(eventsOrganized.filter(e => e.title.trim() || e.description.trim())));
@@ -2104,7 +2109,13 @@ const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
       }
     });
 
-    // DDC Minutes handling
+    // DDC Description (separate field)
+    const validDdcDescription = ddcDescription.filter(d => d.trim());
+    if (validDdcDescription.length > 0) {
+      formData.set('ddcDescription', JSON.stringify(validDdcDescription));
+    }
+
+    // DDC Minutes handling (PDFs only)
     const ddcData = ddcMinutes
       .filter(item => item.name.trim())
       .map(({ file, ...metadata }) => {
@@ -2116,7 +2127,7 @@ const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     formData.set('ddcMinutes', JSON.stringify(ddcData));
     ddcMinutes.forEach(item => {
       if (item.file) {
-        formData.append('ddcMinutePDFs', item.file, item.name);
+        formData.append('ddcMinutePDFs', item.file, item.file.name);
       }
     });
 
@@ -2140,6 +2151,28 @@ const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     bosMinutes.forEach(item => {
       if (item.file) {
         formData.append('bosMinutePDFs', item.file, item.name);
+      }
+    });
+
+    // PAQIC Description (separate field)
+    const validPAQICDescription = PAQICDescription.filter(d => d.trim());
+    if (validPAQICDescription.length > 0) {
+      formData.set('PAQICDescription', JSON.stringify(validPAQICDescription));
+    }
+
+    // PAQIC Files handling (PDFs only)
+    const paqicFilesData = PAQICFiles
+      .filter(item => item.name.trim())
+      .map(({ file, ...metadata }) => {
+        if (file) {
+          return { ...metadata, newPDFName: file.name };
+        }
+        return metadata;
+      });
+    formData.set('PAQICFiles', JSON.stringify(paqicFilesData));
+    PAQICFiles.forEach(item => {
+      if (item.file) {
+        formData.append('paqicPDFs', item.file, item.file.name);
       }
     });
 
@@ -2304,6 +2337,7 @@ const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
             ...item,
             pdf: file ? { ...item.pdf, url: URL.createObjectURL(file) } : { url: '', key: '', contentType: '' },
             file: file || undefined,
+            newPDFName: file ? file.name : undefined,
           };
         }
         return item;
@@ -2319,6 +2353,7 @@ const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
             ...item,
             pdf: file ? { ...item.pdf, url: URL.createObjectURL(file) } : { url: '', key: '', contentType: '' },
             file: file || undefined,
+            newPDFName: file ? file.name : undefined,
           };
         }
         return item;
@@ -2326,6 +2361,21 @@ const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     );
   };
 
+  const handlePAQICPDFChange = (index: number, file: File | null) => {
+    setPAQICFiles(prevPAQICFiles =>
+      prevPAQICFiles.map((item, i) => {
+        if (i === index) {
+          return {
+            ...item,
+            pdf: file ? { ...item.pdf, url: URL.createObjectURL(file) } : { url: '', key: '', contentType: '' },
+            file: file || undefined,
+            newPDFName: file ? file.name : undefined,
+          };
+        }
+        return item;
+      })
+    );
+  };
 
   return (
     <form onSubmit={handleSubmit} style={styles.form}>
@@ -2539,32 +2589,66 @@ const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         </button>
       </div>
 
+      <h3>PAQIC Description</h3>
       <div style={styles.formGroup}>
-        <label style={styles.label}>PAQIC</label>
-        {PAQIC.map((point, index) => (
+        <label style={styles.label}>PAQIC Description Points</label>
+        {PAQICDescription.map((desc, index) => (
           <div key={index} style={{display: 'flex', alignItems: 'center', marginBottom: '8px'}}>
             <input 
-              value={point}
+              value={desc}
               onChange={(e) => {
-                const newPAQIC = [...PAQIC];
-                newPAQIC[index] = e.target.value;
-                setPAQIC(newPAQIC);
+                const newPAQICDescription = [...PAQICDescription];
+                newPAQICDescription[index] = e.target.value;
+                setPAQICDescription(newPAQICDescription);
               }}
               style={{...styles.input, flex: 1}}
-              placeholder={`PAQIC Point ${index + 1}`}
+              placeholder={`PAQIC Description point ${index + 1}`}
             />
             <button 
               type="button"
-              onClick={() => removeArrayItem(setPAQIC, PAQIC, index)}
+              onClick={() => removeArrayItem(setPAQICDescription, PAQICDescription, index)}
               style={styles.removeButton}
-              title="Delete Point"
+              title="Delete Description Point"
             >
               <TrashIcon />
             </button>
           </div>
         ))}
-        <button type="button" onClick={() => addArrayItem(setPAQIC, '')} style={styles.addButton}>
-          Add PAQIC Point
+        <button type="button" onClick={() => addArrayItem(setPAQICDescription, '')} style={styles.addButton}>
+          Add PAQIC Description Point
+        </button>
+      </div>
+
+      <h3>PAQIC Files (PDFs)</h3>
+      <div style={styles.formGroup}>
+        {PAQICFiles.map((item, index) => (
+          <div key={index} style={{...styles.section, marginBottom: '20px'}}>
+            <div style={styles.formGroup}>
+              <label style={styles.label}>PAQIC File Name</label>
+              <input 
+                value={item.name}
+                onChange={(e) => handleArrayChange(setPAQICFiles, PAQICFiles, index, 'name', e.target.value)}
+                style={styles.input}
+                placeholder="Enter PAQIC file name..."
+              />
+            </div>
+            <div style={{flex: 1}}>
+              <PDFUpload 
+                label="PDF File"
+                name={`paqicPDF-${index}`}
+                initialPDF={item.pdf?.url}
+                onChange={(file) => handlePAQICPDFChange(index, file)}
+              />
+            </div>
+            {PAQICFiles.length > 1 && (
+              <button type="button" onClick={() => removeArrayItem(setPAQICFiles, PAQICFiles, index)} style={styles.removeSectionButton}>
+                  Remove PAQIC File
+              </button>
+            )}
+          </div>
+        ))}
+        <button type="button" onClick={() => addArrayItem(setPAQICFiles, { name: '', pdf: { url: '', key: '', contentType: '' } })} style={styles.addButton}>
+          Add PAQIC File
         </button>
       </div>
 
@@ -2602,7 +2686,37 @@ const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
         </button>
       </div>  
 
-      <h3>DDC Minutes</h3>
+      <h3>DDC Description</h3>
+      <div style={styles.formGroup}>
+        <label style={styles.label}>DDC Description Points</label>
+        {ddcDescription.map((desc, index) => (
+          <div key={index} style={{display: 'flex', alignItems: 'center', marginBottom: '8px'}}>
+            <input 
+              value={desc}
+              onChange={(e) => {
+                const newDdcDescription = [...ddcDescription];
+                newDdcDescription[index] = e.target.value;
+                setDdcDescription(newDdcDescription);
+              }}
+              style={{...styles.input, flex: 1}}
+              placeholder={`DDC Description point ${index + 1}`}
+            />
+            <button 
+              type="button"
+              onClick={() => removeArrayItem(setDdcDescription, ddcDescription, index)}
+              style={styles.removeButton}
+              title="Delete Description Point"
+            >
+              <TrashIcon />
+            </button>
+          </div>
+        ))}
+        <button type="button" onClick={() => addArrayItem(setDdcDescription, '')} style={styles.addButton}>
+          Add DDC Description Point
+        </button>
+      </div>
+
+      <h3>DDC Minutes (PDFs)</h3>
       <div style={styles.formGroup}>
         {ddcMinutes.map((item, index) => (
           <div key={index} style={{...styles.section, marginBottom: '20px'}}>
